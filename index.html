@@ -28,7 +28,7 @@
             <h1 class="text-white text-lg font-bold flex items-center gap-2">
                 📢 เขียนข่าวเกษตรกาญจน์
             </h1>
-            <p class="text-green-100 text-xs">ระบบอัจฉริยะ (Auto Grouping)</p>
+            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.NewFilter</p>
         </div>
 
         <form id="newsForm" class="p-4 space-y-5">
@@ -112,13 +112,28 @@
             </div>
 
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-3">
-                <div class="flex items-center gap-2 text-green-800 font-bold border-b pb-2">
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">4</span> ผู้ร่วมคณะ/ผู้ปฏิบัติงาน
+                <div class="flex items-center justify-between border-b pb-2">
+                    <div class="flex items-center gap-2 text-green-800 font-bold">
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">4</span> ผู้ร่วมคณะ
+                    </div>
+                    <span id="selected_count" class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-full">เลือกแล้ว 0 คน</span>
+                </div>
+
+                <div id="selected_summary_container" class="hidden p-2 bg-indigo-50 rounded-lg border border-indigo-100 mb-2">
+                    <p class="text-xs text-indigo-400 mb-1">รายชื่อที่เลือก:</p>
+                    <div id="selected_chips" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs text-gray-500">🔍 ช่วยค้นหา (กรองตามกลุ่ม)</label>
+                    <select id="officer_group_filter" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
+                        <option value="ALL">-- แสดงทั้งหมด --</option>
+                        </select>
                 </div>
                 
-                <input type="text" id="officer_search" placeholder="🔍 พิมพ์ชื่อเพื่อค้นหา..." class="w-full p-2 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-green-500">
+                <input type="text" id="officer_search" placeholder="พิมพ์ชื่อเพื่อค้นหาเพิ่มเติม..." class="w-full p-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-green-500">
                 
-                <div id="officer_list" class="h-56 overflow-y-auto border rounded-lg p-2 space-y-1 bg-white scroll-smooth">
+                <div id="officer_list" class="h-64 overflow-y-auto border rounded-lg p-2 space-y-1 bg-white scroll-smooth">
                     </div>
 
                 <label class="flex items-start space-x-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
@@ -142,7 +157,7 @@
                     <label class="block text-sm font-medium mb-2 text-gray-700">รูปภาพประกอบ (เลือกได้หลายรูป)</label>
                     <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <p class="text-sm text-gray-500">แตะเพื่อเลือกรูปภาพ</p>
                         </div>
                         <input type="file" id="images" multiple accept="image/*" class="hidden" />
@@ -167,8 +182,6 @@
         const WEBHOOK_URL = 'https://hook.us2.make.com/9r5ohk6m95st7v34u32vxqk8na6wefiz';
         const SUPABASE_URL = 'https://ngreqaszduphwftwswdj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmVxYXN6ZHVwaHdmdHdzd2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMTcyNTMsImV4cCI6MjA3NTY5MzI1M30.balzxiWXum4lnl6dCrNzSoF02tRfmG19rEqMnHSynwk';
-        
-        // CSV URL (อย่าลืมกด Publish to web เป็น CSV นะครับ)
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQA5WsMKHm9yiBhlLYyBPy4R71gfSzdQCpjzdg_wLL97RaWjQGfCzPie84oBFvqR3cdRWMuFVyVpu0f/pub?gid=0&single=true&output=csv';
 
         const GROUPS = [
@@ -183,8 +196,11 @@
         let OFFICERS = [];
         let files = [];
         let userId = "guest";
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 🔥 Map สำหรับเก็บคนที่เลือก (Key=Name, Value=OfficerObj) เพื่อให้ไม่หายเวลา Filter 🔥
+        let selectedOfficersMap = new Map();
 
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         document.getElementById('activity_date').valueAsDate = new Date();
 
         (async () => {
@@ -199,7 +215,7 @@
                 await fetchOfficersFromSheet();
 
                 initDropdowns();
-                renderOfficers(OFFICERS);
+                renderOfficers(OFFICERS); // Show all initially
 
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
@@ -211,15 +227,12 @@
                 const res = await fetch(SHEET_CSV_URL);
                 if (!res.ok) throw new Error('ลิงก์ Google Sheet ผิดพลาด');
                 const text = await res.text();
-                
-                // Check if HTML (Not published as CSV)
                 if (text.includes('<!DOCTYPE') || text.includes('<html')) {
                     throw new Error('กรุณากด Publish to Web เป็น CSV ก่อนครับ');
                 }
-
                 const rows = text.split('\n').map(r => r.trim()).filter(r => r);
                 OFFICERS = rows.slice(1).map(row => {
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Regex split CSV
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     const clean = (t) => t ? t.replace(/^"|"$/g, '').trim() : "";
                     return {
                         name: clean(cols[0]),
@@ -228,39 +241,40 @@
                         is_head: clean(cols[3]).toUpperCase() === 'TRUE'
                     };
                 });
-            } catch (e) {
-                console.error(e);
-                OFFICERS = [];
-            }
+            } catch (e) { console.error(e); OFFICERS = []; }
         }
 
         function initDropdowns() {
+            // Dropdown เจ้าของเรื่อง
             const gSel = document.getElementById('group_name');
             GROUPS.forEach(g => gSel.innerHTML += `<option value="${g}">${g}</option>`);
+            
+            // Dropdown กรองรายชื่อ (Section 4)
+            const fSel = document.getElementById('officer_group_filter');
+            GROUPS.forEach(g => fSel.innerHTML += `<option value="${g}">${g}</option>`);
+
             const dSel = document.getElementById('district_name');
             DISTRICTS.forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
+            
             updateHeadList();
         }
 
-        // ✅ อัปเดตรายชื่อหัวหน้า (เพิ่มตัวเลือกพิเศษตามสั่ง)
+        // Section 3: Head List Update
         function updateHeadList() {
             const grp = document.getElementById('group_name').value;
             const hSel = document.getElementById('head_officer_select');
             hSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
 
-            // ตัวเลือก 1: ทุกกลุ่ม + ฝ่ายบริหาร
             const opt1 = document.createElement('option');
             opt1.value = "ALL_HEADS_ADMIN";
             opt1.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป";
             hSel.appendChild(opt1);
 
-            // ตัวเลือก 2: ทุกกลุ่ม (เฉยๆ)
             const opt2 = document.createElement('option');
             opt2.value = "ALL_HEADS_ONLY";
             opt2.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่ม";
             hSel.appendChild(opt2);
 
-            // ตัวเลือก 3: หัวหน้าตามรายชื่อจริง (กรองตามกลุ่ม)
             const heads = OFFICERS.filter(o => o.group === grp && o.is_head);
             heads.forEach(h => {
                 const opt = document.createElement('option');
@@ -270,11 +284,11 @@
             });
         }
 
+        // Section 4: Render List
         function renderOfficers(list) {
             const div = document.getElementById('officer_list');
             div.innerHTML = '';
             
-            // ✅ เรียงลำดับ: หัวหน้าขึ้นก่อนเสมอ
             const sortedList = list.sort((a, b) => (a.is_head === b.is_head) ? 0 : a.is_head ? -1 : 1);
 
             if(sortedList.length === 0) {
@@ -284,12 +298,18 @@
 
             sortedList.forEach((o) => {
                 const uid = `off_${Math.random().toString(36).substr(2,9)}`;
-                // ไฮไลท์หัวหน้าให้เด่นขึ้นนิดนึง (สีพื้นหลัง)
+                // เช็คว่าคนนี้ถูกเลือกอยู่หรือไม่ (จาก Map)
+                const isChecked = selectedOfficersMap.has(o.name);
+                
                 const bgClass = o.is_head ? "bg-green-50 border-green-200" : "hover:bg-gray-50 border-transparent";
                 
                 div.innerHTML += `
                     <div class="flex items-start gap-3 p-2 rounded border ${bgClass} transition mb-1">
-                        <input type="checkbox" id="${uid}" value='${JSON.stringify({name:o.name, position:o.position})}' class="chk-officer mt-1 h-4 w-4 text-green-600 rounded focus:ring-green-500 cursor-pointer">
+                        <input type="checkbox" id="${uid}" 
+                            value='${JSON.stringify({name:o.name, position:o.position})}' 
+                            class="chk-officer mt-1 h-4 w-4 text-green-600 rounded focus:ring-green-500 cursor-pointer"
+                            ${isChecked ? 'checked' : ''}
+                            onchange="toggleOfficer(this)">
                         <label for="${uid}" class="text-sm cursor-pointer w-full select-none">
                             <div class="font-bold text-gray-800 flex items-center gap-1">
                                 ${o.name} 
@@ -301,26 +321,105 @@
             });
         }
 
-        // Events
+        // 🔥 ฟังก์ชันจัดการการเลือก (Toggle) 🔥
+        window.toggleOfficer = (checkbox) => {
+            const data = JSON.parse(checkbox.value);
+            if(checkbox.checked) {
+                selectedOfficersMap.set(data.name, data);
+            } else {
+                selectedOfficersMap.delete(data.name);
+            }
+            updateSelectedDisplay();
+        };
+
+        // แสดงรายชื่อคนที่เลือก (Chips)
+        function updateSelectedDisplay() {
+            const container = document.getElementById('selected_summary_container');
+            const chipsDiv = document.getElementById('selected_chips');
+            const countLabel = document.getElementById('selected_count');
+            
+            chipsDiv.innerHTML = '';
+            
+            if(selectedOfficersMap.size > 0) {
+                container.classList.remove('hidden');
+                selectedOfficersMap.forEach((val, key) => {
+                    chipsDiv.innerHTML += `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                            ${key}
+                            <button onclick="removeOfficer('${key}')" class="ml-1 text-indigo-600 hover:text-indigo-900 font-bold">×</button>
+                        </span>
+                    `;
+                });
+            } else {
+                container.classList.add('hidden');
+            }
+            
+            countLabel.innerText = `เลือกแล้ว ${selectedOfficersMap.size} คน`;
+            
+            // Auto-check Generic Term if > 3
+            const genericCheck = document.getElementById('use_generic_term');
+            if(selectedOfficersMap.size > 3) genericCheck.checked = true;
+        }
+
+        // ฟังก์ชันลบชื่อจาก Chip (กากบาท)
+        window.removeOfficer = (name) => {
+            selectedOfficersMap.delete(name);
+            updateSelectedDisplay();
+            // Re-render list เพื่อเอาติ๊กออก (ถ้าชื่อนั้นแสดงอยู่)
+            const filterVal = document.getElementById('officer_group_filter').value;
+            const term = document.getElementById('officer_search').value.toLowerCase();
+            
+            let currentList = OFFICERS;
+            if(filterVal !== 'ALL') currentList = currentList.filter(o => o.group === filterVal);
+            if(term) currentList = currentList.filter(o => o.name.toLowerCase().includes(term));
+            
+            renderOfficers(currentList);
+        };
+
+        // --- EVENTS ---
+        
+        // 1. เปลี่ยนกลุ่มเจ้าของเรื่อง -> เปลี่ยนหัวหน้า (ไม่กรองคนแล้ว)
         document.getElementById('group_name').addEventListener('change', (e) => {
             updateHeadList();
-            const filtered = OFFICERS.filter(o => o.group === e.target.value);
-            renderOfficers(filtered);
-            document.getElementById('officer_search').value = '';
         });
 
+        // 2. ตัวกรองใหม่สำหรับ Section 4
+        document.getElementById('officer_group_filter').addEventListener('change', (e) => {
+            const val = e.target.value;
+            const term = document.getElementById('officer_search').value.toLowerCase();
+            
+            let filtered = OFFICERS;
+            if(val !== 'ALL') {
+                filtered = filtered.filter(o => o.group === val);
+            }
+            // คงการค้นหาไว้ด้วย
+            if(term) {
+                filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
+            }
+            renderOfficers(filtered);
+        });
+
+        // 3. ช่องค้นหา
         document.getElementById('officer_search').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            const allFiltered = OFFICERS.filter(o => o.name.toLowerCase().includes(term));
-            renderOfficers(allFiltered);
+            const filterVal = document.getElementById('officer_group_filter').value;
+            
+            let filtered = OFFICERS;
+            if(filterVal !== 'ALL') {
+                filtered = filtered.filter(o => o.group === filterVal);
+            }
+            filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
+            renderOfficers(filtered);
         });
 
+        // Source Type Change
         document.getElementById('source_type').addEventListener('change', (e) => {
             const isDist = e.target.value === 'district';
             document.getElementById('district_container').className = isDist ? 'animate-fade-in' : 'hidden';
             document.getElementById('group_container').className = isDist ? 'hidden' : 'animate-fade-in';
         });
 
+        // Image
         document.getElementById('images').addEventListener('change', (e) => {
             files = [...files, ...e.target.files];
             const pv = document.getElementById('image_preview');
@@ -337,6 +436,7 @@
         });
         window.rmImg = (i) => { files.splice(i,1); document.getElementById('images').dispatchEvent(new Event('change')); };
 
+        // Submit
         document.getElementById('newsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit_btn');
@@ -357,7 +457,6 @@
 
                 const kasetAction = document.querySelector('input[name="kaset_action"]:checked').value;
                 
-                // ✅ Logic ใหม่สำหรับหัวหน้ากลุ่ม (รองรับตัวเลือกพิเศษ)
                 let headData = null;
                 const headVal = document.getElementById('head_officer_select').value;
                 
@@ -370,13 +469,11 @@
                     headData.is_all = false;
                 }
 
-                // ✅ Logic ใหม่สำหรับผู้ร่วมคณะ (>3 คน ให้เป็น Generic Term ทันที)
-                const selectedOfficers = [...document.querySelectorAll('.chk-officer:checked')].map(c => JSON.parse(c.value));
-                let useGeneric = document.getElementById('use_generic_term').checked;
+                // ✅ ดึงรายชื่อจาก Map แทนการ querySelector (เพราะบางคนอาจถูกซ่อนโดย filter)
+                const selectedOfficers = Array.from(selectedOfficersMap.values());
                 
-                if (selectedOfficers.length > 3) {
-                    useGeneric = true; // บังคับเป็น True ถ้าเลือกเกิน 3 คน
-                }
+                let useGeneric = document.getElementById('use_generic_term').checked;
+                if (selectedOfficers.length > 3) useGeneric = true;
 
                 const res = await fetch(WEBHOOK_URL, {
                     method: 'POST',
@@ -392,7 +489,7 @@
                         kaset_name: document.getElementById('kaset_name').value,
                         head_officer: headData,
                         officers: selectedOfficers,
-                        use_generic_term: useGeneric, // ส่งค่าที่คำนวณแล้ว
+                        use_generic_term: useGeneric,
                         summary: document.getElementById('summary').value,
                         imageUrls: urls
                     })
