@@ -11,7 +11,6 @@
     <style>
         body { font-family: 'IBM Plex Sans Thai', sans-serif; }
         .kaset-radio:checked + label { background-color: #ecfdf5; border-color: #10b981; color: #065f46; ring: 2px solid #10b981; }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
@@ -29,7 +28,7 @@
             <h1 class="text-white text-lg font-bold flex items-center gap-2">
                 📢 เขียนข่าวเกษตรกาญจน์
             </h1>
-            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.Final</p>
+            <p class="text-green-100 text-xs">ระบบอัจฉริยะ (Auto Grouping)</p>
         </div>
 
         <form id="newsForm" class="p-4 space-y-5">
@@ -56,7 +55,6 @@
                 </div>
                 <div class="space-y-3">
                     <p class="text-sm text-gray-600">ท่านเกษตรจังหวัด (นายเอนก ชื่นอารมณ์) ...</p>
-                    
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <input type="radio" name="kaset_action" id="action_attend" value="attend" class="kaset-radio hidden" checked>
@@ -127,7 +125,9 @@
                     <input type="checkbox" id="use_generic_term" class="mt-1 h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500">
                     <div>
                         <span class="block text-sm font-bold text-indigo-900">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
-                        <span class="block text-xs text-indigo-600">เลือกเมื่อต้องการรวบยอด ไม่ต้องระบุชื่อเจ้าหน้าที่ทุกคนในข่าว</span>
+                        <span class="block text-xs text-indigo-600">
+                            *ระบบจะเลือกให้อัตโนมัติ หากเลือกชื่อเกิน 3 คน
+                        </span>
                     </div>
                 </label>
             </div>
@@ -162,18 +162,15 @@
     </div>
 
     <script>
-        // --- ส่วนตั้งค่า (CONFIGURATION) ---
+        // CONFIG
         const LIFF_ID = '2008873330-48xvsQ9g';
         const WEBHOOK_URL = 'https://hook.us2.make.com/9r5ohk6m95st7v34u32vxqk8na6wefiz';
-        
-        // Supabase (สำหรับอัปโหลดรูป)
         const SUPABASE_URL = 'https://ngreqaszduphwftwswdj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmVxYXN6ZHVwaHdmdHdzd2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMTcyNTMsImV4cCI6MjA3NTY5MzI1M30.balzxiWXum4lnl6dCrNzSoF02tRfmG19rEqMnHSynwk';
         
-        // ลิงก์ CSV จาก Google Sheet (ตามที่คุณให้มา)
+        // CSV URL (อย่าลืมกด Publish to web เป็น CSV นะครับ)
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQA5WsMKHm9yiBhlLYyBPy4R71gfSzdQCpjzdg_wLL97RaWjQGfCzPie84oBFvqR3cdRWMuFVyVpu0f/pub?gid=0&single=true&output=csv';
 
-        // --- ข้อมูลคงที่ (Static Data) ---
         const GROUPS = [
             "กลุ่มยุทธศาสตร์และสารสนเทศ",
             "กลุ่มส่งเสริมและพัฒนาการผลิต",
@@ -183,94 +180,87 @@
         ];
         const DISTRICTS = ["เมืองกาญจนบุรี", "ไทรโยค", "บ่อพลอย", "ศรีสวัสดิ์", "ท่ามะกา", "ท่าม่วง", "ทองผาภูมิ", "สังขละบุรี", "พนมทวน", "เลาขวัญ", "ด่านมะขามเตี้ย", "หนองปรือ", "ห้วยกระเจา"];
 
-        let OFFICERS = []; // รอรับข้อมูลจาก Sheet
-
-        // --- เริ่มต้นระบบ ---
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let OFFICERS = [];
         let files = [];
         let userId = "guest";
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         document.getElementById('activity_date').valueAsDate = new Date();
 
         (async () => {
             try {
-                // 1. LIFF Init
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId;
                     else liff.login();
-                } catch(e) { console.warn('LIFF Error/Dev Mode'); }
+                } catch(e) { console.warn('Dev Mode'); }
 
-                // 2. โหลดรายชื่อจาก Google Sheet
                 document.getElementById('loading-text').innerText = 'กำลังดึงรายชื่อเจ้าหน้าที่...';
                 await fetchOfficersFromSheet();
 
-                // 3. เตรียมหน้าจอ
                 initDropdowns();
-                renderOfficers(OFFICERS); // แสดงรายชื่อทั้งหมดก่อน
+                renderOfficers(OFFICERS);
 
-                // 4. ซ่อน Loading
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
-
-            } catch (err) {
-                alert('เกิดข้อผิดพลาด: ' + err.message);
-            }
+            } catch (err) { alert('Error: ' + err.message); }
         })();
 
-        // --- ฟังก์ชันหลัก ---
-
-        // 1. ดึงข้อมูล CSV
         async function fetchOfficersFromSheet() {
             try {
                 const res = await fetch(SHEET_CSV_URL);
-                if (!res.ok) throw new Error('โหลด Sheet ไม่สำเร็จ');
+                if (!res.ok) throw new Error('ลิงก์ Google Sheet ผิดพลาด');
                 const text = await res.text();
                 
-                // แปลง CSV เป็น Object
+                // Check if HTML (Not published as CSV)
+                if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                    throw new Error('กรุณากด Publish to Web เป็น CSV ก่อนครับ');
+                }
+
                 const rows = text.split('\n').map(r => r.trim()).filter(r => r);
-                // ข้ามบรรทัดแรก (Header) เริ่มแถวที่ 2
                 OFFICERS = rows.slice(1).map(row => {
-                    // แยกด้วย comma (ระวัง: ถ้าชื่อมี comma จะเพี้ยน แต่งานราชการปกติไม่มี)
-                    const cols = row.split(','); 
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Regex split CSV
+                    const clean = (t) => t ? t.replace(/^"|"$/g, '').trim() : "";
                     return {
-                        name: cols[0]?.trim() || "",
-                        position: cols[1]?.trim() || "",
-                        group: cols[2]?.trim() || "",
-                        is_head: cols[3]?.trim().toUpperCase() === 'TRUE'
+                        name: clean(cols[0]),
+                        position: clean(cols[1]),
+                        group: clean(cols[2]),
+                        is_head: clean(cols[3]).toUpperCase() === 'TRUE'
                     };
                 });
-                console.log('Loaded:', OFFICERS.length, 'officers');
             } catch (e) {
                 console.error(e);
-                OFFICERS = []; // ถ้าพัง ให้เป็น array ว่างไว้ก่อน
+                OFFICERS = [];
             }
         }
 
-        // 2. สร้าง Dropdown
         function initDropdowns() {
             const gSel = document.getElementById('group_name');
             GROUPS.forEach(g => gSel.innerHTML += `<option value="${g}">${g}</option>`);
-            
             const dSel = document.getElementById('district_name');
             DISTRICTS.forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
-
-            updateHeadList(); // เรียกครั้งแรก
+            updateHeadList();
         }
 
-        // 3. อัปเดตรายชื่อหัวหน้า (ตามกลุ่มที่เลือก)
+        // ✅ อัปเดตรายชื่อหัวหน้า (เพิ่มตัวเลือกพิเศษตามสั่ง)
         function updateHeadList() {
             const grp = document.getElementById('group_name').value;
             const hSel = document.getElementById('head_officer_select');
             hSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
 
-            // ⭐ ตัวเลือกพิเศษ
-            const allOption = document.createElement('option');
-            allOption.value = "ALL_HEADS";
-            allOption.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป";
-            hSel.appendChild(allOption);
+            // ตัวเลือก 1: ทุกกลุ่ม + ฝ่ายบริหาร
+            const opt1 = document.createElement('option');
+            opt1.value = "ALL_HEADS_ADMIN";
+            opt1.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป";
+            hSel.appendChild(opt1);
 
-            // ตัวเลือกปกติ (กรองจาก Sheet)
+            // ตัวเลือก 2: ทุกกลุ่ม (เฉยๆ)
+            const opt2 = document.createElement('option');
+            opt2.value = "ALL_HEADS_ONLY";
+            opt2.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่ม";
+            hSel.appendChild(opt2);
+
+            // ตัวเลือก 3: หัวหน้าตามรายชื่อจริง (กรองตามกลุ่ม)
             const heads = OFFICERS.filter(o => o.group === grp && o.is_head);
             heads.forEach(h => {
                 const opt = document.createElement('option');
@@ -280,55 +270,57 @@
             });
         }
 
-        // 4. แสดงรายชื่อ (Checkbox)
         function renderOfficers(list) {
             const div = document.getElementById('officer_list');
             div.innerHTML = '';
             
-            if(list.length === 0) {
-                 div.innerHTML = '<div class="text-center text-gray-400 p-4">ไม่พบรายชื่อในกลุ่มนี้</div>';
+            // ✅ เรียงลำดับ: หัวหน้าขึ้นก่อนเสมอ
+            const sortedList = list.sort((a, b) => (a.is_head === b.is_head) ? 0 : a.is_head ? -1 : 1);
+
+            if(sortedList.length === 0) {
+                 div.innerHTML = '<div class="text-center text-gray-400 p-4">ไม่พบรายชื่อ</div>';
                  return;
             }
 
-            list.forEach((o) => {
-                // สร้าง ID สุ่มกันซ้ำ
+            sortedList.forEach((o) => {
                 const uid = `off_${Math.random().toString(36).substr(2,9)}`;
+                // ไฮไลท์หัวหน้าให้เด่นขึ้นนิดนึง (สีพื้นหลัง)
+                const bgClass = o.is_head ? "bg-green-50 border-green-200" : "hover:bg-gray-50 border-transparent";
+                
                 div.innerHTML += `
-                    <div class="flex items-start gap-3 p-2 hover:bg-green-50 rounded border-b border-gray-100 transition">
+                    <div class="flex items-start gap-3 p-2 rounded border ${bgClass} transition mb-1">
                         <input type="checkbox" id="${uid}" value='${JSON.stringify({name:o.name, position:o.position})}' class="chk-officer mt-1 h-4 w-4 text-green-600 rounded focus:ring-green-500 cursor-pointer">
                         <label for="${uid}" class="text-sm cursor-pointer w-full select-none">
-                            <div class="font-bold text-gray-800">${o.name}</div>
+                            <div class="font-bold text-gray-800 flex items-center gap-1">
+                                ${o.name} 
+                                ${o.is_head ? '<span class="text-[10px] bg-green-100 text-green-700 px-1 rounded">หัวหน้า</span>' : ''}
+                            </div>
                             <div class="text-xs text-gray-500">${o.position}</div>
                         </label>
                     </div>`;
             });
         }
 
-        // --- Event Listeners (การตอบโต้ของหน้าจอ) ---
-
-        // เปลี่ยนกลุ่ม -> เปลี่ยนหัวหน้า & กรองรายชื่อ
+        // Events
         document.getElementById('group_name').addEventListener('change', (e) => {
             updateHeadList();
             const filtered = OFFICERS.filter(o => o.group === e.target.value);
             renderOfficers(filtered);
-            document.getElementById('officer_search').value = ''; // เคลียร์ช่องค้นหา
+            document.getElementById('officer_search').value = '';
         });
 
-        // ค้นหาชื่อ
         document.getElementById('officer_search').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const allFiltered = OFFICERS.filter(o => o.name.toLowerCase().includes(term));
             renderOfficers(allFiltered);
         });
 
-        // เปลี่ยนประเภทหน่วยงาน (จังหวัด/อำเภอ)
         document.getElementById('source_type').addEventListener('change', (e) => {
             const isDist = e.target.value === 'district';
             document.getElementById('district_container').className = isDist ? 'animate-fade-in' : 'hidden';
             document.getElementById('group_container').className = isDist ? 'hidden' : 'animate-fade-in';
         });
 
-        // จัดการรูปภาพ
         document.getElementById('images').addEventListener('change', (e) => {
             files = [...files, ...e.target.files];
             const pv = document.getElementById('image_preview');
@@ -345,19 +337,15 @@
         });
         window.rmImg = (i) => { files.splice(i,1); document.getElementById('images').dispatchEvent(new Event('change')); };
 
-        // --- SUBMIT (ส่งข้อมูล) ---
         document.getElementById('newsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit_btn');
-            
             if(files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
 
-            // UI Loading
             btn.disabled = true;
-            btn.innerHTML = '⏳ กำลังอัปโหลดรูปและส่งข้อมูล...';
+            btn.innerHTML = '⏳ กำลังส่งข้อมูล...';
 
             try {
-                // 1. อัปโหลดรูปไป Supabase
                 const urls = [];
                 for(let f of files) {
                     const fname = `news-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -367,23 +355,29 @@
                     urls.push(data.publicUrl);
                 }
 
-                // 2. เตรียมข้อมูล (Payload)
                 const kasetAction = document.querySelector('input[name="kaset_action"]:checked').value;
                 
-                // จัดการหัวหน้ากลุ่ม (เช็คว่าเป็น "ทุกกลุ่ม" หรือ "รายคน")
+                // ✅ Logic ใหม่สำหรับหัวหน้ากลุ่ม (รองรับตัวเลือกพิเศษ)
                 let headData = null;
                 const headVal = document.getElementById('head_officer_select').value;
-                if(headVal === "ALL_HEADS") {
+                
+                if(headVal === "ALL_HEADS_ADMIN") {
                     headData = { name: "หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป", position: "", is_all: true };
+                } else if(headVal === "ALL_HEADS_ONLY") {
+                    headData = { name: "หัวหน้ากลุ่มทุกกลุ่ม", position: "", is_all: true };
                 } else if(headVal) {
                     headData = JSON.parse(headVal);
                     headData.is_all = false;
                 }
 
-                // ดึงรายชื่อที่ติ๊ก
+                // ✅ Logic ใหม่สำหรับผู้ร่วมคณะ (>3 คน ให้เป็น Generic Term ทันที)
                 const selectedOfficers = [...document.querySelectorAll('.chk-officer:checked')].map(c => JSON.parse(c.value));
+                let useGeneric = document.getElementById('use_generic_term').checked;
+                
+                if (selectedOfficers.length > 3) {
+                    useGeneric = true; // บังคับเป็น True ถ้าเลือกเกิน 3 คน
+                }
 
-                // 3. ยิง Webhook ไปหา Make
                 const res = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -398,14 +392,13 @@
                         kaset_name: document.getElementById('kaset_name').value,
                         head_officer: headData,
                         officers: selectedOfficers,
-                        use_generic_term: document.getElementById('use_generic_term').checked,
+                        use_generic_term: useGeneric, // ส่งค่าที่คำนวณแล้ว
                         summary: document.getElementById('summary').value,
                         imageUrls: urls
                     })
                 });
 
                 if(!res.ok) throw new Error('Make Webhook Error');
-
                 alert('✅ ส่งข้อมูลสำเร็จ! ระบบกำลังเขียนข่าวให้ครับ');
                 liff.closeWindow();
 
