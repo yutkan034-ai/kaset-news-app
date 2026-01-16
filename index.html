@@ -14,6 +14,8 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen pb-12">
@@ -28,7 +30,7 @@
             <h1 class="text-white text-lg font-bold flex items-center gap-2">
                 📢 เขียนข่าวเกษตรกาญจน์
             </h1>
-            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.NewFilter</p>
+            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.Resize (Lite Upload)</p>
         </div>
 
         <form id="newsForm" class="p-4 space-y-5">
@@ -119,7 +121,7 @@
                     <span id="selected_count" class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-full">เลือกแล้ว 0 คน</span>
                 </div>
 
-                <div id="selected_summary_container" class="hidden p-2 bg-indigo-50 rounded-lg border border-indigo-100 mb-2">
+                <div id="selected_summary_container" class="hidden p-2 bg-indigo-50 rounded-lg border border-indigo-100 mb-2 animate-fade-in">
                     <p class="text-xs text-indigo-400 mb-1">รายชื่อที่เลือก:</p>
                     <div id="selected_chips" class="flex flex-wrap gap-2"></div>
                 </div>
@@ -155,9 +157,9 @@
                 
                 <div>
                     <label class="block text-sm font-medium mb-2 text-gray-700">รูปภาพประกอบ (เลือกได้หลายรูป)</label>
-                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition relative overflow-hidden">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <p class="text-sm text-gray-500">แตะเพื่อเลือกรูปภาพ</p>
                         </div>
                         <input type="file" id="images" multiple accept="image/*" class="hidden" />
@@ -194,10 +196,8 @@
         const DISTRICTS = ["เมืองกาญจนบุรี", "ไทรโยค", "บ่อพลอย", "ศรีสวัสดิ์", "ท่ามะกา", "ท่าม่วง", "ทองผาภูมิ", "สังขละบุรี", "พนมทวน", "เลาขวัญ", "ด่านมะขามเตี้ย", "หนองปรือ", "ห้วยกระเจา"];
 
         let OFFICERS = [];
-        let files = [];
+        let files = []; // เก็บไฟล์รูปที่ย่อแล้ว
         let userId = "guest";
-        
-        // 🔥 Map สำหรับเก็บคนที่เลือก (Key=Name, Value=OfficerObj) เพื่อให้ไม่หายเวลา Filter 🔥
         let selectedOfficersMap = new Map();
 
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -215,7 +215,7 @@
                 await fetchOfficersFromSheet();
 
                 initDropdowns();
-                renderOfficers(OFFICERS); // Show all initially
+                renderOfficers(OFFICERS);
 
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
@@ -245,11 +245,9 @@
         }
 
         function initDropdowns() {
-            // Dropdown เจ้าของเรื่อง
             const gSel = document.getElementById('group_name');
             GROUPS.forEach(g => gSel.innerHTML += `<option value="${g}">${g}</option>`);
             
-            // Dropdown กรองรายชื่อ (Section 4)
             const fSel = document.getElementById('officer_group_filter');
             GROUPS.forEach(g => fSel.innerHTML += `<option value="${g}">${g}</option>`);
 
@@ -259,7 +257,6 @@
             updateHeadList();
         }
 
-        // Section 3: Head List Update
         function updateHeadList() {
             const grp = document.getElementById('group_name').value;
             const hSel = document.getElementById('head_officer_select');
@@ -284,7 +281,6 @@
             });
         }
 
-        // Section 4: Render List
         function renderOfficers(list) {
             const div = document.getElementById('officer_list');
             div.innerHTML = '';
@@ -298,9 +294,7 @@
 
             sortedList.forEach((o) => {
                 const uid = `off_${Math.random().toString(36).substr(2,9)}`;
-                // เช็คว่าคนนี้ถูกเลือกอยู่หรือไม่ (จาก Map)
                 const isChecked = selectedOfficersMap.has(o.name);
-                
                 const bgClass = o.is_head ? "bg-green-50 border-green-200" : "hover:bg-gray-50 border-transparent";
                 
                 div.innerHTML += `
@@ -321,7 +315,6 @@
             });
         }
 
-        // 🔥 ฟังก์ชันจัดการการเลือก (Toggle) 🔥
         window.toggleOfficer = (checkbox) => {
             const data = JSON.parse(checkbox.value);
             if(checkbox.checked) {
@@ -332,7 +325,6 @@
             updateSelectedDisplay();
         };
 
-        // แสดงรายชื่อคนที่เลือก (Chips)
         function updateSelectedDisplay() {
             const container = document.getElementById('selected_summary_container');
             const chipsDiv = document.getElementById('selected_chips');
@@ -344,7 +336,7 @@
                 container.classList.remove('hidden');
                 selectedOfficersMap.forEach((val, key) => {
                     chipsDiv.innerHTML += `
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800 animate-fade-in">
                             ${key}
                             <button onclick="removeOfficer('${key}')" class="ml-1 text-indigo-600 hover:text-indigo-900 font-bold">×</button>
                         </span>
@@ -355,86 +347,132 @@
             }
             
             countLabel.innerText = `เลือกแล้ว ${selectedOfficersMap.size} คน`;
-            
-            // Auto-check Generic Term if > 3
             const genericCheck = document.getElementById('use_generic_term');
             if(selectedOfficersMap.size > 3) genericCheck.checked = true;
         }
 
-        // ฟังก์ชันลบชื่อจาก Chip (กากบาท)
         window.removeOfficer = (name) => {
             selectedOfficersMap.delete(name);
             updateSelectedDisplay();
-            // Re-render list เพื่อเอาติ๊กออก (ถ้าชื่อนั้นแสดงอยู่)
             const filterVal = document.getElementById('officer_group_filter').value;
             const term = document.getElementById('officer_search').value.toLowerCase();
-            
             let currentList = OFFICERS;
             if(filterVal !== 'ALL') currentList = currentList.filter(o => o.group === filterVal);
             if(term) currentList = currentList.filter(o => o.name.toLowerCase().includes(term));
-            
             renderOfficers(currentList);
         };
 
         // --- EVENTS ---
-        
-        // 1. เปลี่ยนกลุ่มเจ้าของเรื่อง -> เปลี่ยนหัวหน้า (ไม่กรองคนแล้ว)
         document.getElementById('group_name').addEventListener('change', (e) => {
             updateHeadList();
         });
 
-        // 2. ตัวกรองใหม่สำหรับ Section 4
         document.getElementById('officer_group_filter').addEventListener('change', (e) => {
             const val = e.target.value;
             const term = document.getElementById('officer_search').value.toLowerCase();
-            
             let filtered = OFFICERS;
-            if(val !== 'ALL') {
-                filtered = filtered.filter(o => o.group === val);
-            }
-            // คงการค้นหาไว้ด้วย
-            if(term) {
-                filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
-            }
+            if(val !== 'ALL') filtered = filtered.filter(o => o.group === val);
+            if(term) filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
             renderOfficers(filtered);
         });
 
-        // 3. ช่องค้นหา
         document.getElementById('officer_search').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filterVal = document.getElementById('officer_group_filter').value;
-            
             let filtered = OFFICERS;
-            if(filterVal !== 'ALL') {
-                filtered = filtered.filter(o => o.group === filterVal);
-            }
+            if(filterVal !== 'ALL') filtered = filtered.filter(o => o.group === filterVal);
             filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
             renderOfficers(filtered);
         });
 
-        // Source Type Change
         document.getElementById('source_type').addEventListener('change', (e) => {
             const isDist = e.target.value === 'district';
             document.getElementById('district_container').className = isDist ? 'animate-fade-in' : 'hidden';
             document.getElementById('group_container').className = isDist ? 'hidden' : 'animate-fade-in';
         });
 
-        // Image
-        document.getElementById('images').addEventListener('change', (e) => {
-            files = [...files, ...e.target.files];
+        // 🔥🔥 RESIZE & IMAGE HANDLING 🔥🔥
+        document.getElementById('images').addEventListener('change', async (e) => {
+            const newFiles = Array.from(e.target.files);
+            const pv = document.getElementById('image_preview');
+            const loadingId = 'loading-' + Date.now();
+            
+            // Show Loading
+            pv.innerHTML += `<div id="${loadingId}" class="text-xs text-gray-500 col-span-3 text-center py-4 bg-gray-50 rounded animate-pulse">⏳ กำลังบีบอัดรูปภาพ...</div>`;
+
+            for (let file of newFiles) {
+                try {
+                    const resizedFile = await resizeImage(file, 1280, 0.8); // Resize to 1280px, 80% quality
+                    files.push(resizedFile); // Add resized file
+
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const loader = document.getElementById(loadingId);
+                        if(loader) loader.remove();
+                        const i = files.length - 1;
+                        pv.innerHTML += `
+                            <div class="relative group animate-fade-in">
+                                <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-lg border shadow-sm">
+                                <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition">✕</button>
+                            </div>`;
+                    };
+                    reader.readAsDataURL(resizedFile);
+                } catch (err) {
+                    console.error('Resize error:', err);
+                }
+            }
+        });
+
+        window.rmImg = (index) => { 
+            files.splice(index, 1); 
             const pv = document.getElementById('image_preview');
             pv.innerHTML = '';
             files.forEach((f, i) => {
                 const r = new FileReader();
-                r.onload = (ev) => pv.innerHTML += `
-                    <div class="relative group">
-                        <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-lg border shadow-sm">
-                        <button onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs shadow-md opacity-90 hover:opacity-100 hover:scale-110 transition">✕</button>
-                    </div>`;
+                r.onload = (ev) => {
+                    pv.innerHTML += `
+                        <div class="relative group">
+                            <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-lg border shadow-sm">
+                            <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition">✕</button>
+                        </div>`;
+                }
                 r.readAsDataURL(f);
             });
-        });
-        window.rmImg = (i) => { files.splice(i,1); document.getElementById('images').dispatchEvent(new Event('change')); };
+        };
+
+        // Resize Function
+        function resizeImage(file, maxWidth, quality) {
+            return new Promise((resolve, reject) => {
+                if (!file.type.match(/image.*/)) {
+                    reject(new Error("Not an image"));
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (readerEvent) => {
+                    const image = new Image();
+                    image.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = image.width;
+                        let height = image.height;
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(image, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                            if (!blob) { reject(new Error("Canvas is empty")); return; }
+                            const resizedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+                            resolve(resizedFile);
+                        }, 'image/jpeg', quality);
+                    };
+                    image.src = readerEvent.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
         // Submit
         document.getElementById('newsForm').addEventListener('submit', async (e) => {
@@ -443,7 +481,7 @@
             if(files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
 
             btn.disabled = true;
-            btn.innerHTML = '⏳ กำลังส่งข้อมูล...';
+            btn.innerHTML = '⏳ กำลังอัปโหลดและส่งข้อมูล...';
 
             try {
                 const urls = [];
@@ -456,10 +494,8 @@
                 }
 
                 const kasetAction = document.querySelector('input[name="kaset_action"]:checked').value;
-                
                 let headData = null;
                 const headVal = document.getElementById('head_officer_select').value;
-                
                 if(headVal === "ALL_HEADS_ADMIN") {
                     headData = { name: "หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป", position: "", is_all: true };
                 } else if(headVal === "ALL_HEADS_ONLY") {
@@ -469,9 +505,7 @@
                     headData.is_all = false;
                 }
 
-                // ✅ ดึงรายชื่อจาก Map แทนการ querySelector (เพราะบางคนอาจถูกซ่อนโดย filter)
                 const selectedOfficers = Array.from(selectedOfficersMap.values());
-                
                 let useGeneric = document.getElementById('use_generic_term').checked;
                 if (selectedOfficers.length > 3) useGeneric = true;
 
