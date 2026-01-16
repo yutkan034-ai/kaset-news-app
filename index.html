@@ -16,6 +16,16 @@
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Progress Bar Animation on Button */
+        .btn-progress {
+            background-size: 200% 200%;
+            animation: gradientMove 2s ease infinite;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen pb-12">
@@ -30,11 +40,10 @@
             <h1 class="text-white text-lg font-bold flex items-center gap-2">
                 📢 เขียนข่าวเกษตรกาญจน์
             </h1>
-            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.Resize (Lite Upload)</p>
+            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.Progress</p>
         </div>
 
         <form id="newsForm" class="p-4 space-y-5">
-
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
                 <div class="flex items-center gap-2 text-green-800 font-bold border-b pb-2">
                     <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">1</span> ข้อมูลพื้นฐาน
@@ -130,21 +139,18 @@
                     <label class="text-xs text-gray-500">🔍 ช่วยค้นหา (กรองตามกลุ่ม)</label>
                     <select id="officer_group_filter" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
                         <option value="ALL">-- แสดงทั้งหมด --</option>
-                        </select>
+                    </select>
                 </div>
                 
                 <input type="text" id="officer_search" placeholder="พิมพ์ชื่อเพื่อค้นหาเพิ่มเติม..." class="w-full p-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-green-500">
                 
-                <div id="officer_list" class="h-64 overflow-y-auto border rounded-lg p-2 space-y-1 bg-white scroll-smooth">
-                    </div>
+                <div id="officer_list" class="h-64 overflow-y-auto border rounded-lg p-2 space-y-1 bg-white scroll-smooth"></div>
 
                 <label class="flex items-start space-x-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
                     <input type="checkbox" id="use_generic_term" class="mt-1 h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500">
                     <div>
                         <span class="block text-sm font-bold text-indigo-900">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
-                        <span class="block text-xs text-indigo-600">
-                            *ระบบจะเลือกให้อัตโนมัติ หากเลือกชื่อเกิน 3 คน
-                        </span>
+                        <span class="block text-xs text-indigo-600">*เลือกให้อัตโนมัติ หากเลือกชื่อเกิน 3 คน</span>
                     </div>
                 </label>
             </div>
@@ -168,8 +174,8 @@
                 </div>
             </div>
 
-            <div class="pt-2">
-                <button type="submit" id="submit_btn" class="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg shadow-lg hover:from-green-700 hover:to-green-800 transition transform active:scale-95">
+            <div class="pt-2 sticky bottom-0 pb-4 bg-slate-100/90 backdrop-blur-sm">
+                <button type="submit" id="submit_btn" class="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg shadow-lg hover:from-green-700 hover:to-green-800 transition transform active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed">
                     🚀 ส่งข้อมูลให้ AI เขียนข่าว
                 </button>
             </div>
@@ -196,11 +202,11 @@
         const DISTRICTS = ["เมืองกาญจนบุรี", "ไทรโยค", "บ่อพลอย", "ศรีสวัสดิ์", "ท่ามะกา", "ท่าม่วง", "ทองผาภูมิ", "สังขละบุรี", "พนมทวน", "เลาขวัญ", "ด่านมะขามเตี้ย", "หนองปรือ", "ห้วยกระเจา"];
 
         let OFFICERS = [];
-        let files = []; // เก็บไฟล์รูปที่ย่อแล้ว
+        let files = [];
         let userId = "guest";
         let selectedOfficersMap = new Map();
-
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         document.getElementById('activity_date').valueAsDate = new Date();
 
         (async () => {
@@ -213,10 +219,8 @@
 
                 document.getElementById('loading-text').innerText = 'กำลังดึงรายชื่อเจ้าหน้าที่...';
                 await fetchOfficersFromSheet();
-
                 initDropdowns();
                 renderOfficers(OFFICERS);
-
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
             } catch (err) { alert('Error: ' + err.message); }
@@ -227,9 +231,8 @@
                 const res = await fetch(SHEET_CSV_URL);
                 if (!res.ok) throw new Error('ลิงก์ Google Sheet ผิดพลาด');
                 const text = await res.text();
-                if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-                    throw new Error('กรุณากด Publish to Web เป็น CSV ก่อนครับ');
-                }
+                if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('กรุณากด Publish to Web เป็น CSV ก่อนครับ');
+                
                 const rows = text.split('\n').map(r => r.trim()).filter(r => r);
                 OFFICERS = rows.slice(1).map(row => {
                     const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
@@ -317,11 +320,8 @@
 
         window.toggleOfficer = (checkbox) => {
             const data = JSON.parse(checkbox.value);
-            if(checkbox.checked) {
-                selectedOfficersMap.set(data.name, data);
-            } else {
-                selectedOfficersMap.delete(data.name);
-            }
+            if(checkbox.checked) selectedOfficersMap.set(data.name, data);
+            else selectedOfficersMap.delete(data.name);
             updateSelectedDisplay();
         };
 
@@ -331,7 +331,6 @@
             const countLabel = document.getElementById('selected_count');
             
             chipsDiv.innerHTML = '';
-            
             if(selectedOfficersMap.size > 0) {
                 container.classList.remove('hidden');
                 selectedOfficersMap.forEach((val, key) => {
@@ -339,12 +338,9 @@
                         <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800 animate-fade-in">
                             ${key}
                             <button onclick="removeOfficer('${key}')" class="ml-1 text-indigo-600 hover:text-indigo-900 font-bold">×</button>
-                        </span>
-                    `;
+                        </span>`;
                 });
-            } else {
-                container.classList.add('hidden');
-            }
+            } else container.classList.add('hidden');
             
             countLabel.innerText = `เลือกแล้ว ${selectedOfficersMap.size} คน`;
             const genericCheck = document.getElementById('use_generic_term');
@@ -362,28 +358,19 @@
             renderOfficers(currentList);
         };
 
-        // --- EVENTS ---
-        document.getElementById('group_name').addEventListener('change', (e) => {
-            updateHeadList();
-        });
+        // EVENT LISTENERS
+        document.getElementById('group_name').addEventListener('change', () => updateHeadList());
+        document.getElementById('officer_group_filter').addEventListener('change', (e) => filterList());
+        document.getElementById('officer_search').addEventListener('input', (e) => filterList());
 
-        document.getElementById('officer_group_filter').addEventListener('change', (e) => {
-            const val = e.target.value;
+        function filterList() {
+            const val = document.getElementById('officer_group_filter').value;
             const term = document.getElementById('officer_search').value.toLowerCase();
             let filtered = OFFICERS;
             if(val !== 'ALL') filtered = filtered.filter(o => o.group === val);
             if(term) filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
             renderOfficers(filtered);
-        });
-
-        document.getElementById('officer_search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filterVal = document.getElementById('officer_group_filter').value;
-            let filtered = OFFICERS;
-            if(filterVal !== 'ALL') filtered = filtered.filter(o => o.group === filterVal);
-            filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
-            renderOfficers(filtered);
-        });
+        }
 
         document.getElementById('source_type').addEventListener('change', (e) => {
             const isDist = e.target.value === 'district';
@@ -391,20 +378,17 @@
             document.getElementById('group_container').className = isDist ? 'hidden' : 'animate-fade-in';
         });
 
-        // 🔥🔥 RESIZE & IMAGE HANDLING 🔥🔥
+        // IMAGE RESIZE & HANDLE
         document.getElementById('images').addEventListener('change', async (e) => {
             const newFiles = Array.from(e.target.files);
             const pv = document.getElementById('image_preview');
             const loadingId = 'loading-' + Date.now();
-            
-            // Show Loading
             pv.innerHTML += `<div id="${loadingId}" class="text-xs text-gray-500 col-span-3 text-center py-4 bg-gray-50 rounded animate-pulse">⏳ กำลังบีบอัดรูปภาพ...</div>`;
 
             for (let file of newFiles) {
                 try {
-                    const resizedFile = await resizeImage(file, 1280, 0.8); // Resize to 1280px, 80% quality
-                    files.push(resizedFile); // Add resized file
-
+                    const resizedFile = await resizeImage(file, 1280, 0.8); 
+                    files.push(resizedFile);
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         const loader = document.getElementById(loadingId);
@@ -417,9 +401,7 @@
                             </div>`;
                     };
                     reader.readAsDataURL(resizedFile);
-                } catch (err) {
-                    console.error('Resize error:', err);
-                }
+                } catch (err) { console.error('Resize error:', err); }
             }
         });
 
@@ -440,13 +422,9 @@
             });
         };
 
-        // Resize Function
         function resizeImage(file, maxWidth, quality) {
             return new Promise((resolve, reject) => {
-                if (!file.type.match(/image.*/)) {
-                    reject(new Error("Not an image"));
-                    return;
-                }
+                if (!file.type.match(/image.*/)) { reject(new Error("Not an image")); return; }
                 const reader = new FileReader();
                 reader.onload = (readerEvent) => {
                     const image = new Image();
@@ -454,10 +432,7 @@
                         const canvas = document.createElement('canvas');
                         let width = image.width;
                         let height = image.height;
-                        if (width > maxWidth) {
-                            height *= maxWidth / width;
-                            width = maxWidth;
-                        }
+                        if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
@@ -474,18 +449,23 @@
             });
         }
 
-        // Submit
+        // SUBMIT WITH PROGRESS %
         document.getElementById('newsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit_btn');
             if(files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
 
             btn.disabled = true;
-            btn.innerHTML = '⏳ กำลังอัปโหลดและส่งข้อมูล...';
-
+            btn.classList.add('btn-progress', 'from-green-500', 'to-emerald-600');
+            
             try {
                 const urls = [];
-                for(let f of files) {
+                for (let i = 0; i < files.length; i++) {
+                    const f = files[i];
+                    // Update Button Text with %
+                    const percent = Math.round(((i) / files.length) * 100);
+                    btn.innerHTML = `⏳ กำลังอัปโหลด... ${percent}%`;
+
                     const fname = `news-${Date.now()}-${Math.random().toString(36).substring(7)}`;
                     const { error } = await sb.storage.from('news-images').upload(fname, f);
                     if(error) throw error;
@@ -493,17 +473,14 @@
                     urls.push(data.publicUrl);
                 }
 
+                btn.innerHTML = `⏳ กำลังส่งข้อมูล... 100%`;
+
                 const kasetAction = document.querySelector('input[name="kaset_action"]:checked').value;
                 let headData = null;
                 const headVal = document.getElementById('head_officer_select').value;
-                if(headVal === "ALL_HEADS_ADMIN") {
-                    headData = { name: "หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป", position: "", is_all: true };
-                } else if(headVal === "ALL_HEADS_ONLY") {
-                    headData = { name: "หัวหน้ากลุ่มทุกกลุ่ม", position: "", is_all: true };
-                } else if(headVal) {
-                    headData = JSON.parse(headVal);
-                    headData.is_all = false;
-                }
+                if(headVal === "ALL_HEADS_ADMIN") headData = { name: "หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป", position: "", is_all: true };
+                else if(headVal === "ALL_HEADS_ONLY") headData = { name: "หัวหน้ากลุ่มทุกกลุ่ม", position: "", is_all: true };
+                else if(headVal) { headData = JSON.parse(headVal); headData.is_all = false; }
 
                 const selectedOfficers = Array.from(selectedOfficersMap.values());
                 let useGeneric = document.getElementById('use_generic_term').checked;
@@ -537,6 +514,7 @@
                 console.error(err);
                 alert('เกิดข้อผิดพลาด: ' + err.message);
                 btn.disabled = false;
+                btn.classList.remove('btn-progress');
                 btn.innerHTML = '🚀 ส่งข้อมูลให้ AI เขียนข่าว';
             }
         });
