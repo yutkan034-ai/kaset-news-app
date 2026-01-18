@@ -7,180 +7,233 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'IBM Plex Sans Thai', sans-serif; }
-        .kaset-radio:checked + label { background-color: #ecfdf5; border-color: #10b981; color: #065f46; ring: 2px solid #10b981; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Progress Bar Animation on Button */
-        .btn-progress {
-            background-size: 200% 200%;
-            animation: gradientMove 2s ease infinite;
+        body { 
+            font-family: 'IBM Plex Sans Thai', sans-serif; 
+            background-color: #e4fde1; /* Frosted Mint */
+            color: #575761; /* Charcoal */
         }
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #648381; border-radius: 10px; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Modern Radio Input */
+        .kaset-radio:checked + label {
+            background: #fff;
+            border-color: #8acb88;
+            color: #575761;
+            box-shadow: 0 4px 6px -1px rgba(138, 203, 136, 0.4);
+            transform: translateY(-2px);
+            ring: 2px solid #8acb88;
         }
+        .btn-modern { background-size: 200% auto; transition: 0.5s; }
+        .btn-modern:hover { background-position: right center; }
+        .glass-header { background: linear-gradient(135deg, #575761 0%, #648381 100%); }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen pb-12">
+<body class="pb-12">
 
-    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-green-600"></div>
-        <p class="mt-4 text-gray-500 font-medium" id="loading-text">กำลังเชื่อมต่อฐานข้อมูล...</p>
+    <div id="loading-screen" class="fixed inset-0 bg-[#e4fde1]/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+        <div class="relative">
+            <div class="animate-spin rounded-full h-16 w-16 border-[4px] border-white border-t-[#ffbf46]"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-xl">🌿</div>
+        </div>
+        <p class="mt-4 text-[#575761] font-medium tracking-wide animate-pulse" id="loading-text">กำลังโหลดระบบ...</p>
     </div>
 
     <div id="app" class="max-w-xl mx-auto hidden">
-        <div class="bg-gradient-to-r from-green-700 to-emerald-600 p-4 sticky top-0 z-20 shadow-lg">
-            <h1 class="text-white text-lg font-bold flex items-center gap-2">
-                📢 เขียนข่าวเกษตรกาญจน์
-            </h1>
-            <p class="text-green-100 text-xs">ระบบอัจฉริยะ V.Progress</p>
+        <div class="glass-header p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-20 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-[#e4fde1] text-xl font-bold flex items-center gap-2 drop-shadow-md">
+                        ข่าวเกษตรกาญจน์
+                    </h1>
+                    <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Full-Options</p>
+                </div>
+                <div class="bg-white/10 border border-white/20 rounded-full px-3 py-1 backdrop-blur-md">
+                    <span class="text-[10px] text-[#ffbf46] font-bold tracking-widest uppercase">Official</span>
+                </div>
+            </div>
         </div>
 
-        <form id="newsForm" class="p-4 space-y-5">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center gap-2 text-green-800 font-bold border-b pb-2">
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">1</span> ข้อมูลพื้นฐาน
+        <form id="newsForm" class="px-5 space-y-6">
+
+            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#8acb88] p-6 relative hover:shadow-lg transition-all duration-300">
+                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
+                    <div class="w-8 h-8 rounded-full bg-[#e4fde1] text-[#648381] flex items-center justify-center font-bold text-sm">1</div>
+                    <h3 class="text-[#575761] font-bold text-lg">ข้อมูลพื้นฐาน</h3>
                 </div>
-                <div class="grid grid-cols-1 gap-3">
+                <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="text-sm font-medium text-gray-700">วันที่ปฏิบัติงาน</label>
-                        <input type="date" id="activity_date" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">วันที่ปฏิบัติงาน</label>
+                        <input type="date" id="activity_date" class="w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] focus:bg-white outline-none transition text-[#575761] font-medium">
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-700">สถานที่จัดกิจกรรม</label>
-                        <input type="text" id="location" placeholder="เช่น ห้องประชุมเอราวัณ..." class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">สถานที่</label>
+                        <input type="text" id="location" placeholder="ระบุสถานที่..." class="w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] focus:bg-white outline-none transition text-[#575761] placeholder:text-[#648381]/50">
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center gap-2 text-green-800 font-bold border-b pb-2">
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">2</span> เกษตรจังหวัดกาญจนบุรี
+            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#ffbf46] p-6 relative group hover:shadow-lg transition-all duration-300">
+                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
+                    <div class="w-8 h-8 rounded-full bg-[#ffbf46]/20 text-[#ffbf46] flex items-center justify-center font-bold text-sm">2</div>
+                    <h3 class="text-[#575761] font-bold text-lg">เกษตรจังหวัด</h3>
                 </div>
-                <div class="space-y-3">
-                    <p class="text-sm text-gray-600">ท่านเกษตรจังหวัด (นายเอนก ชื่นอารมณ์) ...</p>
+
+                <div class="space-y-4">
+                    <div class="bg-[#e4fde1]/50 rounded-lg p-3 border border-[#8acb88]/30 flex items-center gap-2">
+                        <span class="text-xl">👤</span>
+                        <span class="text-sm text-[#575761] font-semibold">นายเอนก ชื่นอารมณ์</span>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <input type="radio" name="kaset_action" id="action_attend" value="attend" class="kaset-radio hidden" checked>
-                            <label for="action_attend" class="block text-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition border-gray-200 h-full flex flex-col justify-center items-center">
-                                <span class="text-2xl mb-1">🙋‍♂️</span>
-                                <span class="text-sm font-bold">เข้าร่วม/เป็นประธาน</span>
+                        <div class="col-span-1">
+                            <input type="radio" name="kaset_action" id="action_chair" value="chair" class="kaset-radio hidden" checked>
+                            <label for="action_chair" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">👑</span>
+                                <span class="text-xs font-bold">เป็นประธาน<br>ลงพื้นที่</span>
                             </label>
                         </div>
-                        <div>
+                        
+                        <div class="col-span-1">
                             <input type="radio" name="kaset_action" id="action_assign" value="assign" class="kaset-radio hidden">
-                            <label for="action_assign" class="block text-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition border-gray-200 h-full flex flex-col justify-center items-center">
-                                <span class="text-2xl mb-1">👈</span>
-                                <span class="text-sm font-bold">มอบหมาย</span>
+                            <label for="action_assign" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">👈</span>
+                                <span class="text-xs font-bold">มอบหมาย</span>
                             </label>
                         </div>
-                        <div class="col-span-2">
-                             <input type="radio" name="kaset_action" id="action_none" value="none" class="kaset-radio hidden">
-                             <label for="action_none" class="block text-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition border-gray-200 text-xs text-gray-400">
-                                ❌ ไม่ต้องกล่าวถึงในข่าวนี้
-                             </label>
+
+                        <div class="col-span-1">
+                            <input type="radio" name="kaset_action" id="action_join_solo" value="join_solo" class="kaset-radio hidden">
+                            <label for="action_join_solo" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">🙋‍♂️</span>
+                                <span class="text-xs font-bold">เข้าร่วม<br>(ส่วนตัว)</span>
+                            </label>
                         </div>
+
+                        <div class="col-span-1">
+                            <input type="radio" name="kaset_action" id="action_report" value="report" class="kaset-radio hidden">
+                            <label for="action_report" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">🎤</span>
+                                <span class="text-xs font-bold">กล่าวรายงาน<br>จัดงาน</span>
+                            </label>
+                        </div>
+
+                        <div class="col-span-2">
+                            <input type="radio" name="kaset_action" id="action_lead_join" value="lead_join" class="kaset-radio hidden">
+                            <label for="action_lead_join" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">👥</span>
+                                <span class="text-xs font-bold">นำทีมเจ้าหน้าที่เข้าร่วม (มีผู้อื่นเป็นประธาน)</span>
+                            </label>
+                        </div>
+                         <div class="col-span-2">
+                            <input type="radio" name="kaset_action" id="action_none" value="none" class="kaset-radio hidden">
+                            <label for="action_none" class="block text-center p-2 border border-dashed border-[#648381]/30 rounded-xl cursor-pointer hover:bg-[#e4fde1]/50 text-xs text-[#648381] hover:text-[#575761] transition">
+                               ❌ ไม่ต้องกล่าวถึงในข่าวนี้
+                            </label>
+                       </div>
                     </div>
-                    <input type="text" id="kaset_name" value="นายเอนก ชื่นอารมณ์" class="hidden w-full text-sm border-gray-300 rounded mt-2 text-gray-500 bg-gray-50">
+                    <input type="text" id="kaset_name" value="นายเอนก ชื่นอารมณ์" class="hidden">
+                    
+                    <p class="text-[10px] text-[#ffbf46] bg-[#ffbf46]/10 p-2 rounded border border-[#ffbf46]/20">
+                        💡 หากเลือก <b>เข้าร่วม/กล่าวรายงาน/นำทีม</b> กรุณาระบุชื่อ "ประธานในพิธี" หรือ "ผู้กล่าวต้อนรับ" ลงในช่องเนื้อหาข่าวด้วย
+                    </p>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center gap-2 text-green-800 font-bold border-b pb-2">
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">3</span> เจ้าของเรื่อง & หัวหน้าคณะ
+            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#648381] p-6 relative hover:shadow-lg transition-all duration-300">
+                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
+                    <div class="w-8 h-8 rounded-full bg-[#648381]/20 text-[#648381] flex items-center justify-center font-bold text-sm">3</div>
+                    <h3 class="text-[#575761] font-bold text-lg">เจ้าของเรื่อง</h3>
                 </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">สังกัด</label>
-                    <select id="source_type" class="w-full mt-1 p-2 border rounded-lg bg-gray-50">
-                        <option value="province">สำนักงานเกษตรจังหวัด</option>
-                        <option value="district">สำนักงานเกษตรอำเภอ</option>
-                    </select>
-                </div>
-
-                <div id="group_container" class="animate-fade-in">
-                    <label class="text-sm font-medium text-gray-700">กลุ่ม/ฝ่าย เจ้าของเรื่อง</label>
-                    <select id="group_name" class="w-full mt-1 p-2 border rounded-lg bg-white border-green-200 text-green-800 font-medium focus:ring-2 focus:ring-green-500"></select>
-                </div>
-                
-                <div id="district_container" class="hidden animate-fade-in">
-                    <label class="text-sm font-medium text-gray-700">อำเภอ</label>
-                    <select id="district_name" class="w-full mt-1 p-2 border rounded-lg bg-white focus:ring-2 focus:ring-green-500"></select>
-                </div>
-
-                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                    <label class="text-sm font-bold text-yellow-800">⭐ หัวหน้าคณะ/ผู้รับมอบหมาย</label>
-                    <select id="head_officer_select" class="w-full mt-1 p-2 border rounded-lg bg-white text-gray-800 text-sm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">สังกัด</label>
+                        <select id="source_type" class="w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#648381] outline-none text-[#575761] font-medium">
+                            <option value="province">สำนักงานเกษตรจังหวัด</option>
+                            <option value="district">สำนักงานเกษตรอำเภอ</option>
                         </select>
+                    </div>
+                    <div id="group_container" class="animate-fade-in">
+                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">กลุ่ม/ฝ่าย</label>
+                        <select id="group_name" class="w-full px-4 py-3 bg-white border border-[#648381]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761] font-medium shadow-sm"></select>
+                    </div>
+                    <div id="district_container" class="hidden animate-fade-in">
+                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">อำเภอ</label>
+                        <select id="district_name" class="w-full px-4 py-3 bg-white border border-[#648381]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761] shadow-sm"></select>
+                    </div>
+                    <div class="p-4 bg-[#ffbf46]/10 rounded-xl border border-[#ffbf46]/30">
+                        <label class="text-sm font-bold text-[#575761] mb-2 block flex items-center gap-1">
+                            ⭐ หัวหน้าคณะ <span class="text-[10px] font-normal bg-[#ffbf46] text-white px-2 py-0.5 rounded-full shadow-sm ml-auto">VIP</span>
+                        </label>
+                        <select id="head_officer_select" class="w-full px-3 py-2 bg-white border border-[#ffbf46] rounded-lg text-[#575761] text-sm focus:ring-2 focus:ring-[#ffbf46] outline-none"></select>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-3">
-                <div class="flex items-center justify-between border-b pb-2">
-                    <div class="flex items-center gap-2 text-green-800 font-bold">
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">4</span> ผู้ร่วมคณะ
+            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#8acb88] p-6 relative hover:shadow-lg transition-all duration-300">
+                <div class="flex items-center justify-between mb-4 border-b border-[#e4fde1] pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#8acb88]/20 text-[#8acb88] flex items-center justify-center font-bold text-sm">4</div>
+                        <h3 class="text-[#575761] font-bold text-lg">ผู้ร่วมคณะ</h3>
                     </div>
-                    <span id="selected_count" class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-full">เลือกแล้ว 0 คน</span>
+                    <span id="selected_count" class="text-[10px] font-bold bg-[#ffbf46] text-white px-2 py-1 rounded-full shadow-sm">0 คน</span>
                 </div>
-
-                <div id="selected_summary_container" class="hidden p-2 bg-indigo-50 rounded-lg border border-indigo-100 mb-2 animate-fade-in">
-                    <p class="text-xs text-indigo-400 mb-1">รายชื่อที่เลือก:</p>
+                <div id="selected_summary_container" class="hidden p-3 bg-[#e4fde1] rounded-xl border border-[#8acb88]/30 mb-3 animate-fade-in">
                     <div id="selected_chips" class="flex flex-wrap gap-2"></div>
                 </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs text-gray-500">🔍 ช่วยค้นหา (กรองตามกลุ่ม)</label>
-                    <select id="officer_group_filter" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
-                        <option value="ALL">-- แสดงทั้งหมด --</option>
-                    </select>
+                <div class="flex gap-2 mb-3">
+                    <div class="w-1/3">
+                        <select id="officer_group_filter" class="w-full px-2 py-2.5 bg-[#f9fdf9] border border-[#648381]/20 rounded-xl text-xs focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761]">
+                            <option value="ALL">ทั้งหมด</option>
+                        </select>
+                    </div>
+                    <div class="w-2/3 relative">
+                        <input type="text" id="officer_search" placeholder="ค้นหาชื่อ..." class="w-full pl-9 pr-3 py-2.5 bg-[#f9fdf9] border border-[#648381]/20 rounded-xl text-sm focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761]">
+                        <span class="absolute left-3 top-2.5 text-[#648381]">🔍</span>
+                    </div>
                 </div>
-                
-                <input type="text" id="officer_search" placeholder="พิมพ์ชื่อเพื่อค้นหาเพิ่มเติม..." class="w-full p-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-green-500">
-                
-                <div id="officer_list" class="h-64 overflow-y-auto border rounded-lg p-2 space-y-1 bg-white scroll-smooth"></div>
-
-                <label class="flex items-start space-x-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
-                    <input type="checkbox" id="use_generic_term" class="mt-1 h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500">
+                <div id="officer_list" class="h-60 overflow-y-auto border border-[#e4fde1] rounded-xl p-2 space-y-2 bg-[#f9fdf9] scroll-smooth shadow-inner"></div>
+                <label class="flex items-center gap-3 p-3 mt-3 bg-[#e4fde1]/50 rounded-xl cursor-pointer hover:bg-[#e4fde1] transition border border-transparent hover:border-[#8acb88]/30">
+                    <input type="checkbox" id="use_generic_term" class="h-5 w-5 text-[#8acb88] rounded focus:ring-[#8acb88] border-[#648381]/30">
                     <div>
-                        <span class="block text-sm font-bold text-indigo-900">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
-                        <span class="block text-xs text-indigo-600">*เลือกให้อัตโนมัติ หากเลือกชื่อเกิน 3 คน</span>
+                        <span class="block text-sm font-bold text-[#575761]">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
+                        <span class="block text-[10px] text-[#648381]">*ระบบติ๊กอัตโนมัติเมื่อ > 3 คน</span>
                     </div>
                 </label>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center gap-2 text-green-800 font-bold border-b pb-2">
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">5</span> รายละเอียดข่าว
+            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#ffbf46] p-6 relative hover:shadow-lg transition-all duration-300">
+                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
+                    <div class="w-8 h-8 rounded-full bg-[#ffbf46]/20 text-[#ffbf46] flex items-center justify-center font-bold text-sm">5</div>
+                    <h3 class="text-[#575761] font-bold text-lg">เนื้อหา & รูปภาพ</h3>
                 </div>
-                <textarea id="summary" rows="5" required placeholder="สรุปประเด็นข่าว: ทำอะไร ที่ไหน เพื่ออะไร ผลลัพธ์เป็นอย่างไร..." class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
-                
+                <textarea id="summary" rows="6" required placeholder="📝 สรุปประเด็นสำคัญ...
+(⚠️ หากเลือก เข้าร่วม/กล่าวรายงาน โปรดระบุชื่อประธานในพิธีที่นี่ด้วย)" class="w-full p-4 border border-[#8acb88]/30 rounded-2xl focus:ring-2 focus:ring-[#ffbf46] outline-none text-[#575761] bg-[#f9fdf9] placeholder:text-[#648381]/50 shadow-inner mb-4"></textarea>
                 <div>
-                    <label class="block text-sm font-medium mb-2 text-gray-700">รูปภาพประกอบ (เลือกได้หลายรูป)</label>
-                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition relative overflow-hidden">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <p class="text-sm text-gray-500">แตะเพื่อเลือกรูปภาพ</p>
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#ffbf46]/50 rounded-2xl cursor-pointer bg-[#ffbf46]/5 hover:bg-[#ffbf46]/10 hover:border-[#ffbf46] transition group">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-[#ffbf46] group-hover:text-[#e0a025] transition">
+                            <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <p class="text-sm font-medium">เพิ่มรูปภาพประกอบ</p>
                         </div>
                         <input type="file" id="images" multiple accept="image/*" class="hidden" />
                     </label>
-                    <div id="image_preview" class="grid grid-cols-3 gap-2 mt-3"></div>
+                    <div id="image_preview" class="grid grid-cols-3 gap-3 mt-4"></div>
                 </div>
             </div>
 
-            <div class="pt-2 sticky bottom-0 pb-4 bg-slate-100/90 backdrop-blur-sm">
-                <button type="submit" id="submit_btn" class="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg shadow-lg hover:from-green-700 hover:to-green-800 transition transform active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed">
-                    🚀 ส่งข้อมูลให้ AI เขียนข่าว
+            <div class="pt-4 pb-8 sticky bottom-0 z-10">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#e4fde1] via-[#e4fde1]/90 to-transparent -z-10 h-full pointer-events-none"></div>
+                <button type="submit" id="submit_btn" class="w-full py-4 bg-gradient-to-r from-[#8acb88] to-[#ffbf46] text-[#575761] rounded-2xl font-bold text-lg shadow-lg shadow-[#8acb88]/40 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 btn-modern flex items-center justify-center gap-2 border border-[#fff]/20">
+                    <span>🚀</span> <span id="btn_text">ส่งข้อมูลให้ AI ประมวลผล</span>
                 </button>
             </div>
             
-            <p class="text-center text-xs text-gray-400 pb-8">สำนักงานเกษตรจังหวัดกาญจนบุรี</p>
+            <p class="text-center text-xs text-[#648381] pb-8 opacity-70">สำนักงานเกษตรจังหวัดกาญจนบุรี</p>
         </form>
     </div>
 
@@ -291,28 +344,28 @@
             const sortedList = list.sort((a, b) => (a.is_head === b.is_head) ? 0 : a.is_head ? -1 : 1);
 
             if(sortedList.length === 0) {
-                 div.innerHTML = '<div class="text-center text-gray-400 p-4">ไม่พบรายชื่อ</div>';
+                 div.innerHTML = '<div class="text-center text-[#648381]/70 p-8 text-sm">ไม่พบรายชื่อในกลุ่มนี้</div>';
                  return;
             }
 
             sortedList.forEach((o) => {
                 const uid = `off_${Math.random().toString(36).substr(2,9)}`;
                 const isChecked = selectedOfficersMap.has(o.name);
-                const bgClass = o.is_head ? "bg-green-50 border-green-200" : "hover:bg-gray-50 border-transparent";
+                const bgClass = o.is_head ? "bg-[#ffbf46]/10 border-[#ffbf46]/30" : "bg-white hover:bg-[#e4fde1]/30 border-[#648381]/10";
+                const headBadge = o.is_head ? '<span class="text-[9px] bg-[#ffbf46] text-white px-1.5 py-0.5 rounded shadow-sm ml-2 tracking-wide uppercase">หัวหน้า</span>' : '';
                 
                 div.innerHTML += `
-                    <div class="flex items-start gap-3 p-2 rounded border ${bgClass} transition mb-1">
+                    <div class="flex items-center gap-3 p-3 rounded-xl border ${bgClass} transition mb-2">
                         <input type="checkbox" id="${uid}" 
                             value='${JSON.stringify({name:o.name, position:o.position})}' 
-                            class="chk-officer mt-1 h-4 w-4 text-green-600 rounded focus:ring-green-500 cursor-pointer"
+                            class="chk-officer h-5 w-5 text-[#8acb88] rounded focus:ring-[#8acb88] border-[#648381]/30 cursor-pointer"
                             ${isChecked ? 'checked' : ''}
                             onchange="toggleOfficer(this)">
                         <label for="${uid}" class="text-sm cursor-pointer w-full select-none">
-                            <div class="font-bold text-gray-800 flex items-center gap-1">
-                                ${o.name} 
-                                ${o.is_head ? '<span class="text-[10px] bg-green-100 text-green-700 px-1 rounded">หัวหน้า</span>' : ''}
+                            <div class="font-bold text-[#575761] flex items-center">
+                                ${o.name} ${headBadge}
                             </div>
-                            <div class="text-xs text-gray-500">${o.position}</div>
+                            <div class="text-xs text-[#648381]/80 mt-0.5 font-light">${o.position}</div>
                         </label>
                     </div>`;
             });
@@ -335,14 +388,14 @@
                 container.classList.remove('hidden');
                 selectedOfficersMap.forEach((val, key) => {
                     chipsDiv.innerHTML += `
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800 animate-fade-in">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-[#8acb88] text-white animate-fade-in shadow-sm">
                             ${key}
-                            <button onclick="removeOfficer('${key}')" class="ml-1 text-indigo-600 hover:text-indigo-900 font-bold">×</button>
+                            <button type="button" onclick="removeOfficer('${key}')" class="ml-1.5 text-[#575761] hover:text-white font-bold bg-white/30 rounded-full w-4 h-4 flex items-center justify-center">×</button>
                         </span>`;
                 });
             } else container.classList.add('hidden');
             
-            countLabel.innerText = `เลือกแล้ว ${selectedOfficersMap.size} คน`;
+            countLabel.innerText = `เลือก ${selectedOfficersMap.size} คน`;
             const genericCheck = document.getElementById('use_generic_term');
             if(selectedOfficersMap.size > 3) genericCheck.checked = true;
         }
@@ -383,7 +436,7 @@
             const newFiles = Array.from(e.target.files);
             const pv = document.getElementById('image_preview');
             const loadingId = 'loading-' + Date.now();
-            pv.innerHTML += `<div id="${loadingId}" class="text-xs text-gray-500 col-span-3 text-center py-4 bg-gray-50 rounded animate-pulse">⏳ กำลังบีบอัดรูปภาพ...</div>`;
+            pv.innerHTML += `<div id="${loadingId}" class="text-xs text-[#648381] col-span-3 text-center py-4 bg-[#e4fde1] rounded-xl animate-pulse border border-[#8acb88]/30">⚡ กำลังบีบอัดรูปภาพ...</div>`;
 
             for (let file of newFiles) {
                 try {
@@ -396,8 +449,8 @@
                         const i = files.length - 1;
                         pv.innerHTML += `
                             <div class="relative group animate-fade-in">
-                                <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-lg border shadow-sm">
-                                <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition">✕</button>
+                                <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm">
+                                <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-[#ffbf46] text-[#575761] w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition border-2 border-white font-bold">✕</button>
                             </div>`;
                     };
                     reader.readAsDataURL(resizedFile);
@@ -413,9 +466,9 @@
                 const r = new FileReader();
                 r.onload = (ev) => {
                     pv.innerHTML += `
-                        <div class="relative group">
-                            <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-lg border shadow-sm">
-                            <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition">✕</button>
+                        <div class="relative group animate-fade-in">
+                            <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm">
+                            <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-[#ffbf46] text-[#575761] w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition border-2 border-white font-bold">✕</button>
                         </div>`;
                 }
                 r.readAsDataURL(f);
@@ -453,10 +506,11 @@
         document.getElementById('newsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit_btn');
+            const btnText = document.getElementById('btn_text');
             if(files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
 
             btn.disabled = true;
-            btn.classList.add('btn-progress', 'from-green-500', 'to-emerald-600');
+            btn.classList.add('btn-modern', 'from-[#8acb88]', 'to-[#ffbf46]');
             
             try {
                 const urls = [];
@@ -464,7 +518,7 @@
                     const f = files[i];
                     // Update Button Text with %
                     const percent = Math.round(((i) / files.length) * 100);
-                    btn.innerHTML = `⏳ กำลังอัปโหลด... ${percent}%`;
+                    btnText.innerHTML = `☁️ กำลังอัปโหลด... ${percent}%`;
 
                     const fname = `news-${Date.now()}-${Math.random().toString(36).substring(7)}`;
                     const { error } = await sb.storage.from('news-images').upload(fname, f);
@@ -473,7 +527,7 @@
                     urls.push(data.publicUrl);
                 }
 
-                btn.innerHTML = `⏳ กำลังส่งข้อมูล... 100%`;
+                btnText.innerHTML = `📨 กำลังส่งข้อมูล... 100%`;
 
                 const kasetAction = document.querySelector('input[name="kaset_action"]:checked').value;
                 let headData = null;
@@ -514,8 +568,8 @@
                 console.error(err);
                 alert('เกิดข้อผิดพลาด: ' + err.message);
                 btn.disabled = false;
-                btn.classList.remove('btn-progress');
-                btn.innerHTML = '🚀 ส่งข้อมูลให้ AI เขียนข่าว';
+                btn.classList.remove('btn-modern');
+                btnText.innerHTML = 'ลองใหม่อีกครั้ง';
             }
         });
     </script>
