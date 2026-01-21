@@ -51,7 +51,7 @@
                     <h1 class="text-[#e4fde1] text-xl font-bold flex items-center gap-2 drop-shadow-md">
                         ข่าวเกษตรกาญจน์
                     </h1>
-                    <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Full-Options</p>
+                    <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Complete</p>
                 </div>
                 <div class="bg-white/10 border border-white/20 rounded-full px-3 py-1 backdrop-blur-md">
                     <span class="text-[10px] text-[#ffbf46] font-bold tracking-widest uppercase">Official</span>
@@ -98,7 +98,6 @@
                                 <span class="text-xs font-bold">เป็นประธาน<br>ลงพื้นที่</span>
                             </label>
                         </div>
-                        
                         <div class="col-span-1">
                             <input type="radio" name="kaset_action" id="action_assign" value="assign" class="kaset-radio hidden">
                             <label for="action_assign" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
@@ -114,23 +113,30 @@
                                 <span class="text-xs font-bold">เข้าร่วม<br>(ส่วนตัว)</span>
                             </label>
                         </div>
-
                         <div class="col-span-1">
                             <input type="radio" name="kaset_action" id="action_report" value="report" class="kaset-radio hidden">
                             <label for="action_report" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
                                 <span class="text-xl mb-1">🎤</span>
-                                <span class="text-xs font-bold">กล่าวรายงาน<br>จัดงาน</span>
+                                <span class="text-xs font-bold">กล่าวรายงาน</span>
+                            </label>
+                        </div>
+
+                        <div class="col-span-1">
+                            <input type="radio" name="kaset_action" id="action_lead_join" value="lead_join" class="kaset-radio hidden">
+                            <label for="action_lead_join" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">👥</span>
+                                <span class="text-xs font-bold">นำทีมเข้าร่วม<br>(มีประธาน)</span>
+                            </label>
+                        </div>
+                        <div class="col-span-1">
+                            <input type="radio" name="kaset_action" id="action_lead_organize" value="lead_organize" class="kaset-radio hidden">
+                            <label for="action_lead_organize" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
+                                <span class="text-xl mb-1">🏗️</span>
+                                <span class="text-xs font-bold">นำทีมจัดงาน<br>(มีประธาน)</span>
                             </label>
                         </div>
 
                         <div class="col-span-2">
-                            <input type="radio" name="kaset_action" id="action_lead_join" value="lead_join" class="kaset-radio hidden">
-                            <label for="action_lead_join" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">👥</span>
-                                <span class="text-xs font-bold">นำทีมเจ้าหน้าที่เข้าร่วม (มีผู้อื่นเป็นประธาน)</span>
-                            </label>
-                        </div>
-                         <div class="col-span-2">
                             <input type="radio" name="kaset_action" id="action_none" value="none" class="kaset-radio hidden">
                             <label for="action_none" class="block text-center p-2 border border-dashed border-[#648381]/30 rounded-xl cursor-pointer hover:bg-[#e4fde1]/50 text-xs text-[#648381] hover:text-[#575761] transition">
                                ❌ ไม่ต้องกล่าวถึงในข่าวนี้
@@ -140,7 +146,7 @@
                     <input type="text" id="kaset_name" value="นายเอนก ชื่นอารมณ์" class="hidden">
                     
                     <p class="text-[10px] text-[#ffbf46] bg-[#ffbf46]/10 p-2 rounded border border-[#ffbf46]/20">
-                        💡 หากเลือก <b>เข้าร่วม/กล่าวรายงาน/นำทีม</b> กรุณาระบุชื่อ "ประธานในพิธี" หรือ "ผู้กล่าวต้อนรับ" ลงในช่องเนื้อหาข่าวด้วย
+                        💡 หากเลือก <b>เข้าร่วม/กล่าวรายงาน/นำทีม</b> กรุณาระบุชื่อ "ประธานในพิธี" ลงในช่องเนื้อหาข่าวด้วย
                     </p>
                 </div>
             </div>
@@ -213,7 +219,7 @@
                     <h3 class="text-[#575761] font-bold text-lg">เนื้อหา & รูปภาพ</h3>
                 </div>
                 <textarea id="summary" rows="6" required placeholder="📝 สรุปประเด็นสำคัญ...
-(⚠️ หากเลือก เข้าร่วม/กล่าวรายงาน โปรดระบุชื่อประธานในพิธีที่นี่ด้วย)" class="w-full p-4 border border-[#8acb88]/30 rounded-2xl focus:ring-2 focus:ring-[#ffbf46] outline-none text-[#575761] bg-[#f9fdf9] placeholder:text-[#648381]/50 shadow-inner mb-4"></textarea>
+(⚠️ หากเลือก เข้าร่วม/กล่าวรายงาน/นำทีม โปรดระบุชื่อประธานในพิธีด้วย)" class="w-full p-4 border border-[#8acb88]/30 rounded-2xl focus:ring-2 focus:ring-[#ffbf46] outline-none text-[#575761] bg-[#f9fdf9] placeholder:text-[#648381]/50 shadow-inner mb-4"></textarea>
                 <div>
                     <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#ffbf46]/50 rounded-2xl cursor-pointer bg-[#ffbf46]/5 hover:bg-[#ffbf46]/10 hover:border-[#ffbf46] transition group">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6 text-[#ffbf46] group-hover:text-[#e0a025] transition">
@@ -351,6 +357,7 @@
             sortedList.forEach((o) => {
                 const uid = `off_${Math.random().toString(36).substr(2,9)}`;
                 const isChecked = selectedOfficersMap.has(o.name);
+                
                 const bgClass = o.is_head ? "bg-[#ffbf46]/10 border-[#ffbf46]/30" : "bg-white hover:bg-[#e4fde1]/30 border-[#648381]/10";
                 const headBadge = o.is_head ? '<span class="text-[9px] bg-[#ffbf46] text-white px-1.5 py-0.5 rounded shadow-sm ml-2 tracking-wide uppercase">หัวหน้า</span>' : '';
                 
