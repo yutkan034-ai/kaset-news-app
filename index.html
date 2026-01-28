@@ -51,7 +51,7 @@
                     <h1 class="text-[#e4fde1] text-xl font-bold flex items-center gap-2 drop-shadow-md">
                         ข่าวเกษตรกาญจน์
                     </h1>
-                    <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Complete</p>
+                    <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Final</p>
                 </div>
                 <div class="bg-white/10 border border-white/20 rounded-full px-3 py-1 backdrop-blur-md">
                     <span class="text-[10px] text-[#ffbf46] font-bold tracking-widest uppercase">Official</span>
@@ -105,7 +105,6 @@
                                 <span class="text-xs font-bold">มอบหมาย</span>
                             </label>
                         </div>
-
                         <div class="col-span-1">
                             <input type="radio" name="kaset_action" id="action_join_solo" value="join_solo" class="kaset-radio hidden">
                             <label for="action_join_solo" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
@@ -120,7 +119,6 @@
                                 <span class="text-xs font-bold">กล่าวรายงาน</span>
                             </label>
                         </div>
-
                         <div class="col-span-1">
                             <input type="radio" name="kaset_action" id="action_lead_join" value="lead_join" class="kaset-radio hidden">
                             <label for="action_lead_join" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
@@ -135,7 +133,6 @@
                                 <span class="text-xs font-bold">นำทีมจัดงาน<br>(มีประธาน)</span>
                             </label>
                         </div>
-
                         <div class="col-span-2">
                             <input type="radio" name="kaset_action" id="action_none" value="none" class="kaset-radio hidden">
                             <label for="action_none" class="block text-center p-2 border border-dashed border-[#648381]/30 rounded-xl cursor-pointer hover:bg-[#e4fde1]/50 text-xs text-[#648381] hover:text-[#575761] transition">
@@ -418,7 +415,6 @@
             renderOfficers(currentList);
         };
 
-        // EVENT LISTENERS
         document.getElementById('group_name').addEventListener('change', () => updateHeadList());
         document.getElementById('officer_group_filter').addEventListener('change', (e) => filterList());
         document.getElementById('officer_search').addEventListener('input', (e) => filterList());
@@ -438,7 +434,6 @@
             document.getElementById('group_container').className = isDist ? 'hidden' : 'animate-fade-in';
         });
 
-        // IMAGE RESIZE & HANDLE
         document.getElementById('images').addEventListener('change', async (e) => {
             const newFiles = Array.from(e.target.files);
             const pv = document.getElementById('image_preview');
@@ -509,7 +504,6 @@
             });
         }
 
-        // SUBMIT WITH PROGRESS %
         document.getElementById('newsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit_btn');
@@ -523,7 +517,6 @@
                 const urls = [];
                 for (let i = 0; i < files.length; i++) {
                     const f = files[i];
-                    // Update Button Text with %
                     const percent = Math.round(((i) / files.length) * 100);
                     btnText.innerHTML = `☁️ กำลังอัปโหลด... ${percent}%`;
 
@@ -547,6 +540,12 @@
                 let useGeneric = document.getElementById('use_generic_term').checked;
                 if (selectedOfficers.length > 3) useGeneric = true;
 
+                // --- LOGIC แก้ไขค่า District และ Group ตรงนี้ ---
+                const sourceType = document.getElementById('source_type').value;
+                const districtVal = (sourceType === 'district') ? document.getElementById('district_name').value : ""; 
+                const groupVal = (sourceType === 'province') ? document.getElementById('group_name').value : "";
+                // ---------------------------------------------
+
                 const res = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -554,9 +553,9 @@
                         userId,
                         date: document.getElementById('activity_date').value,
                         location: document.getElementById('location').value,
-                        source: document.getElementById('source_type').value,
-                        group: document.getElementById('group_name').value,
-                        district: document.getElementById('district_name').value,
+                        source: sourceType,
+                        group: groupVal,
+                        district: districtVal,
                         kaset_action: kasetAction,
                         kaset_name: document.getElementById('kaset_name').value,
                         head_officer: headData,
