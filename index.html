@@ -1,583 +1,490 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบข่าวเกษตรกาญจน์</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { 
-            font-family: 'IBM Plex Sans Thai', sans-serif; 
-            background-color: #e4fde1; /* Frosted Mint */
-            color: #575761; /* Charcoal */
-        }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #648381; border-radius: 10px; }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Modern Radio Input */
-        .kaset-radio:checked + label {
-            background: #fff;
-            border-color: #8acb88;
-            color: #575761;
-            box-shadow: 0 4px 6px -1px rgba(138, 203, 136, 0.4);
-            transform: translateY(-2px);
-            ring: 2px solid #8acb88;
-        }
-        .btn-modern { background-size: 200% auto; transition: 0.5s; }
-        .btn-modern:hover { background-position: right center; }
-        .glass-header { background: linear-gradient(135deg, #575761 0%, #648381 100%); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบข่าวเกษตรกาญจน์</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style type="text/tailwindcss">
+  @layer components {
+    .card { @apply bg-white rounded-2xl shadow-sm p-6 relative hover:shadow-lg transition-all duration-300 border-l-[6px]; }
+    .card-head { @apply flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3; }
+    .num { @apply w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm; }
+    .lbl { @apply text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block; }
+    .inp { @apply w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] focus:bg-white outline-none transition text-[#575761] font-medium; }
+    .opt { @apply flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center; }
+  }
+</style>
+<style>
+  body { font-family: 'IBM Plex Sans Thai', sans-serif; background-color: #e4fde1; color: #575761; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #648381; border-radius: 10px; }
+  .animate-fade-in { animation: fadeIn .4s ease-out forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .kaset-radio:checked + label { background: #fff; border-color: #8acb88; outline: 2px solid #8acb88; box-shadow: 0 4px 6px -1px rgba(138,203,136,.4); transform: translateY(-2px); }
+  .glass-header { background: linear-gradient(135deg, #575761 0%, #648381 100%); }
+</style>
 </head>
 <body class="pb-12">
 
-    <div id="loading-screen" class="fixed inset-0 bg-[#e4fde1]/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-        <div class="relative">
-            <div class="animate-spin rounded-full h-16 w-16 border-[4px] border-white border-t-[#ffbf46]"></div>
-            <div class="absolute inset-0 flex items-center justify-center text-xl">🌿</div>
+<div id="loading-screen" class="fixed inset-0 bg-[#e4fde1]/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+  <div class="relative">
+    <div class="animate-spin rounded-full h-16 w-16 border-[4px] border-white border-t-[#ffbf46]"></div>
+    <div class="absolute inset-0 flex items-center justify-center text-xl">🌿</div>
+  </div>
+  <p class="mt-4 font-medium tracking-wide animate-pulse" id="loading-text">กำลังโหลดระบบ...</p>
+</div>
+
+<div id="app" class="max-w-xl mx-auto hidden">
+  <div class="glass-header p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-20 mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-[#e4fde1] text-xl font-bold drop-shadow-md">ข่าวเกษตรกาญจน์</h1>
+        <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Final</p>
+      </div>
+      <div class="bg-white/10 border border-white/20 rounded-full px-3 py-1 backdrop-blur-md">
+        <span class="text-[10px] text-[#ffbf46] font-bold tracking-widest uppercase">Official</span>
+      </div>
+    </div>
+  </div>
+
+  <form id="newsForm" class="px-5 space-y-6">
+
+    <!-- 0: ประเภทข่าว -->
+    <div class="card border-[#575761]">
+      <div class="card-head"><div class="num bg-[#575761]/10 text-[#575761]">0</div><h3 class="font-bold text-lg">เลือกประเภทข่าว</h3></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <input type="radio" name="post_type" id="type_field" value="field" class="kaset-radio hidden" checked>
+          <label for="type_field" class="opt"><span class="text-2xl mb-1">📍</span><span class="text-xs font-bold">ข่าวลงพื้นที่</span></label>
         </div>
-        <p class="mt-4 text-[#575761] font-medium tracking-wide animate-pulse" id="loading-text">กำลังโหลดระบบ...</p>
+        <div>
+          <input type="radio" name="post_type" id="type_pr" value="pr" class="kaset-radio hidden">
+          <label for="type_pr" class="opt"><span class="text-2xl mb-1">📣</span><span class="text-xs font-bold">ข่าวประชาสัมพันธ์</span></label>
+        </div>
+      </div>
+      <p id="type_hint" class="hidden mt-3 text-[11px] text-[#648381] bg-[#e4fde1]/60 p-2 rounded-lg">
+        ✨ ระบบจะเขียนโพสต์ให้น่าสนใจ พร้อมอิโมจิ และแฮชแท็ก 5 อัน (มี #เกษตรกาญจน์ เสมอ)
+      </p>
     </div>
 
-    <div id="app" class="max-w-xl mx-auto hidden">
-        <div class="glass-header p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-20 mb-8">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-[#e4fde1] text-xl font-bold flex items-center gap-2 drop-shadow-md">
-                        ข่าวเกษตรกาญจน์
-                    </h1>
-                    <p class="text-[#8acb88] text-xs mt-0.5 font-light tracking-wider">ระบบรายงานผล V.Final</p>
-                </div>
-                <div class="bg-white/10 border border-white/20 rounded-full px-3 py-1 backdrop-blur-md">
-                    <span class="text-[10px] text-[#ffbf46] font-bold tracking-widest uppercase">Official</span>
-                </div>
-            </div>
+    <!-- 1: ข้อมูลพื้นฐาน -->
+    <div id="basic_card" class="card border-[#8acb88]">
+      <div class="card-head"><div class="num bg-[#e4fde1] text-[#648381]">1</div><h3 class="font-bold text-lg">ข้อมูลพื้นฐาน</h3></div>
+      <div class="grid gap-4">
+        <div>
+          <label id="lbl_date" class="lbl">วันที่ปฏิบัติงาน</label>
+          <input type="date" id="activity_date" class="inp">
         </div>
-
-        <form id="newsForm" class="px-5 space-y-6">
-
-            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#8acb88] p-6 relative hover:shadow-lg transition-all duration-300">
-                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
-                    <div class="w-8 h-8 rounded-full bg-[#e4fde1] text-[#648381] flex items-center justify-center font-bold text-sm">1</div>
-                    <h3 class="text-[#575761] font-bold text-lg">ข้อมูลพื้นฐาน</h3>
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">วันที่ปฏิบัติงาน</label>
-                        <input type="date" id="activity_date" class="w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] focus:bg-white outline-none transition text-[#575761] font-medium">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">สถานที่</label>
-                        <input type="text" id="location" placeholder="ระบุสถานที่..." class="w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] focus:bg-white outline-none transition text-[#575761] placeholder:text-[#648381]/50">
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#ffbf46] p-6 relative group hover:shadow-lg transition-all duration-300">
-                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
-                    <div class="w-8 h-8 rounded-full bg-[#ffbf46]/20 text-[#ffbf46] flex items-center justify-center font-bold text-sm">2</div>
-                    <h3 class="text-[#575761] font-bold text-lg">เกษตรจังหวัด</h3>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="bg-[#e4fde1]/50 rounded-lg p-3 border border-[#8acb88]/30 flex items-center gap-2">
-                        <span class="text-xl">👤</span>
-                        <span class="text-sm text-[#575761] font-semibold">นายเอนก ชื่นอารมณ์</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="col-span-1">
-                            <input type="radio" name="kaset_action" id="action_chair" value="chair" class="kaset-radio hidden" checked>
-                            <label for="action_chair" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">👑</span>
-                                <span class="text-xs font-bold">เป็นประธาน<br>ลงพื้นที่</span>
-                            </label>
-                        </div>
-                        <div class="col-span-1">
-                            <input type="radio" name="kaset_action" id="action_assign" value="assign" class="kaset-radio hidden">
-                            <label for="action_assign" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">👈</span>
-                                <span class="text-xs font-bold">มอบหมาย</span>
-                            </label>
-                        </div>
-                        <div class="col-span-1">
-                            <input type="radio" name="kaset_action" id="action_join_solo" value="join_solo" class="kaset-radio hidden">
-                            <label for="action_join_solo" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">🙋‍♂️</span>
-                                <span class="text-xs font-bold">เข้าร่วม<br>(ส่วนตัว)</span>
-                            </label>
-                        </div>
-                        <div class="col-span-1">
-                            <input type="radio" name="kaset_action" id="action_report" value="report" class="kaset-radio hidden">
-                            <label for="action_report" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">🎤</span>
-                                <span class="text-xs font-bold">กล่าวรายงาน</span>
-                            </label>
-                        </div>
-                        <div class="col-span-1">
-                            <input type="radio" name="kaset_action" id="action_lead_join" value="lead_join" class="kaset-radio hidden">
-                            <label for="action_lead_join" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">👥</span>
-                                <span class="text-xs font-bold">นำทีมเข้าร่วม<br>(มีประธาน)</span>
-                            </label>
-                        </div>
-                        <div class="col-span-1">
-                            <input type="radio" name="kaset_action" id="action_lead_organize" value="lead_organize" class="kaset-radio hidden">
-                            <label for="action_lead_organize" class="flex flex-col items-center justify-center p-3 border border-[#e4fde1] bg-[#f9fdf9] rounded-xl cursor-pointer hover:bg-[#e4fde1] transition h-full text-center">
-                                <span class="text-xl mb-1">🏗️</span>
-                                <span class="text-xs font-bold">นำทีมจัดงาน<br>(มีประธาน)</span>
-                            </label>
-                        </div>
-                        <div class="col-span-2">
-                            <input type="radio" name="kaset_action" id="action_none" value="none" class="kaset-radio hidden">
-                            <label for="action_none" class="block text-center p-2 border border-dashed border-[#648381]/30 rounded-xl cursor-pointer hover:bg-[#e4fde1]/50 text-xs text-[#648381] hover:text-[#575761] transition">
-                               ❌ ไม่ต้องกล่าวถึงในข่าวนี้
-                            </label>
-                       </div>
-                    </div>
-                    <input type="text" id="kaset_name" value="นายเอนก ชื่นอารมณ์" class="hidden">
-                    
-                    <p class="text-[10px] text-[#ffbf46] bg-[#ffbf46]/10 p-2 rounded border border-[#ffbf46]/20">
-                        💡 หากเลือก <b>เข้าร่วม/กล่าวรายงาน/นำทีม</b> กรุณาระบุชื่อ "ประธานในพิธี" ลงในช่องเนื้อหาข่าวด้วย
-                    </p>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#648381] p-6 relative hover:shadow-lg transition-all duration-300">
-                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
-                    <div class="w-8 h-8 rounded-full bg-[#648381]/20 text-[#648381] flex items-center justify-center font-bold text-sm">3</div>
-                    <h3 class="text-[#575761] font-bold text-lg">เจ้าของเรื่อง</h3>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">สังกัด</label>
-                        <select id="source_type" class="w-full px-4 py-3 bg-[#e4fde1]/30 border border-[#8acb88]/30 rounded-xl focus:ring-2 focus:ring-[#648381] outline-none text-[#575761] font-medium">
-                            <option value="province">สำนักงานเกษตรจังหวัด</option>
-                            <option value="district">สำนักงานเกษตรอำเภอ</option>
-                        </select>
-                    </div>
-                    <div id="group_container" class="animate-fade-in">
-                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">กลุ่ม/ฝ่าย</label>
-                        <select id="group_name" class="w-full px-4 py-3 bg-white border border-[#648381]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761] font-medium shadow-sm"></select>
-                    </div>
-                    <div id="district_container" class="hidden animate-fade-in">
-                        <label class="text-xs font-bold text-[#648381] uppercase tracking-wide mb-1.5 block">อำเภอ</label>
-                        <select id="district_name" class="w-full px-4 py-3 bg-white border border-[#648381]/30 rounded-xl focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761] shadow-sm"></select>
-                    </div>
-                    <div class="p-4 bg-[#ffbf46]/10 rounded-xl border border-[#ffbf46]/30">
-                        <label class="text-sm font-bold text-[#575761] mb-2 block flex items-center gap-1">
-                            ⭐ หัวหน้าคณะ <span class="text-[10px] font-normal bg-[#ffbf46] text-white px-2 py-0.5 rounded-full shadow-sm ml-auto">VIP</span>
-                        </label>
-                        <select id="head_officer_select" class="w-full px-3 py-2 bg-white border border-[#ffbf46] rounded-lg text-[#575761] text-sm focus:ring-2 focus:ring-[#ffbf46] outline-none"></select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#8acb88] p-6 relative hover:shadow-lg transition-all duration-300">
-                <div class="flex items-center justify-between mb-4 border-b border-[#e4fde1] pb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-[#8acb88]/20 text-[#8acb88] flex items-center justify-center font-bold text-sm">4</div>
-                        <h3 class="text-[#575761] font-bold text-lg">ผู้ร่วมคณะ</h3>
-                    </div>
-                    <span id="selected_count" class="text-[10px] font-bold bg-[#ffbf46] text-white px-2 py-1 rounded-full shadow-sm">0 คน</span>
-                </div>
-                <div id="selected_summary_container" class="hidden p-3 bg-[#e4fde1] rounded-xl border border-[#8acb88]/30 mb-3 animate-fade-in">
-                    <div id="selected_chips" class="flex flex-wrap gap-2"></div>
-                </div>
-                <div class="flex gap-2 mb-3">
-                    <div class="w-1/3">
-                        <select id="officer_group_filter" class="w-full px-2 py-2.5 bg-[#f9fdf9] border border-[#648381]/20 rounded-xl text-xs focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761]">
-                            <option value="ALL">ทั้งหมด</option>
-                        </select>
-                    </div>
-                    <div class="w-2/3 relative">
-                        <input type="text" id="officer_search" placeholder="ค้นหาชื่อ..." class="w-full pl-9 pr-3 py-2.5 bg-[#f9fdf9] border border-[#648381]/20 rounded-xl text-sm focus:ring-2 focus:ring-[#8acb88] outline-none text-[#575761]">
-                        <span class="absolute left-3 top-2.5 text-[#648381]">🔍</span>
-                    </div>
-                </div>
-                <div id="officer_list" class="h-60 overflow-y-auto border border-[#e4fde1] rounded-xl p-2 space-y-2 bg-[#f9fdf9] scroll-smooth shadow-inner"></div>
-                <label class="flex items-center gap-3 p-3 mt-3 bg-[#e4fde1]/50 rounded-xl cursor-pointer hover:bg-[#e4fde1] transition border border-transparent hover:border-[#8acb88]/30">
-                    <input type="checkbox" id="use_generic_term" class="h-5 w-5 text-[#8acb88] rounded focus:ring-[#8acb88] border-[#648381]/30">
-                    <div>
-                        <span class="block text-sm font-bold text-[#575761]">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
-                        <span class="block text-[10px] text-[#648381]">*ระบบติ๊กอัตโนมัติเมื่อ > 3 คน</span>
-                    </div>
-                </label>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border-l-[6px] border-[#ffbf46] p-6 relative hover:shadow-lg transition-all duration-300">
-                <div class="flex items-center gap-3 mb-4 border-b border-[#e4fde1] pb-3">
-                    <div class="w-8 h-8 rounded-full bg-[#ffbf46]/20 text-[#ffbf46] flex items-center justify-center font-bold text-sm">5</div>
-                    <h3 class="text-[#575761] font-bold text-lg">เนื้อหา & รูปภาพ</h3>
-                </div>
-                <textarea id="summary" rows="6" required placeholder="📝 สรุปประเด็นสำคัญ...
-(⚠️ หากเลือก เข้าร่วม/กล่าวรายงาน/นำทีม โปรดระบุชื่อประธานในพิธีด้วย)" class="w-full p-4 border border-[#8acb88]/30 rounded-2xl focus:ring-2 focus:ring-[#ffbf46] outline-none text-[#575761] bg-[#f9fdf9] placeholder:text-[#648381]/50 shadow-inner mb-4"></textarea>
-                <div>
-                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#ffbf46]/50 rounded-2xl cursor-pointer bg-[#ffbf46]/5 hover:bg-[#ffbf46]/10 hover:border-[#ffbf46] transition group">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-[#ffbf46] group-hover:text-[#e0a025] transition">
-                            <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <p class="text-sm font-medium">เพิ่มรูปภาพประกอบ</p>
-                        </div>
-                        <input type="file" id="images" multiple accept="image/*" class="hidden" />
-                    </label>
-                    <div id="image_preview" class="grid grid-cols-3 gap-3 mt-4"></div>
-                </div>
-            </div>
-
-            <div class="pt-4 pb-8 sticky bottom-0 z-10">
-                <div class="absolute inset-0 bg-gradient-to-t from-[#e4fde1] via-[#e4fde1]/90 to-transparent -z-10 h-full pointer-events-none"></div>
-                <button type="submit" id="submit_btn" class="w-full py-4 bg-gradient-to-r from-[#8acb88] to-[#ffbf46] text-[#575761] rounded-2xl font-bold text-lg shadow-lg shadow-[#8acb88]/40 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 btn-modern flex items-center justify-center gap-2 border border-[#fff]/20">
-                    <span>🚀</span> <span id="btn_text">ส่งข้อมูลให้ AI ประมวลผล</span>
-                </button>
-            </div>
-            
-            <p class="text-center text-xs text-[#648381] pb-8 opacity-70">สำนักงานเกษตรจังหวัดกาญจนบุรี</p>
-        </form>
+        <div>
+          <label id="lbl_location" class="lbl">สถานที่</label>
+          <input type="text" id="location" placeholder="ระบุสถานที่..." class="inp">
+        </div>
+      </div>
     </div>
 
-    <script>
-        // CONFIG
-        const LIFF_ID = '2008873330-48xvsQ9g';
-        const WEBHOOK_URL = 'https://hook.us2.make.com/9r5ohk6m95st7v34u32vxqk8na6wefiz';
-        const SUPABASE_URL = 'https://ngreqaszduphwftwswdj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmVxYXN6ZHVwaHdmdHdzd2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMTcyNTMsImV4cCI6MjA3NTY5MzI1M30.balzxiWXum4lnl6dCrNzSoF02tRfmG19rEqMnHSynwk';
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQA5WsMKHm9yiBhlLYyBPy4R71gfSzdQCpjzdg_wLL97RaWjQGfCzPie84oBFvqR3cdRWMuFVyVpu0f/pub?gid=0&single=true&output=csv';
+    <!-- 2: เกษตรจังหวัด (เฉพาะข่าวลงพื้นที่) -->
+    <div id="kaset_card" class="card border-[#ffbf46]">
+      <div class="card-head"><div class="num bg-[#ffbf46]/20 text-[#ffbf46]">2</div><h3 class="font-bold text-lg">เกษตรจังหวัด</h3></div>
+      <div class="space-y-4">
+        <div class="bg-[#e4fde1]/50 rounded-lg p-3 border border-[#8acb88]/30 flex items-center gap-2">
+          <span class="text-xl">👤</span><span class="text-sm font-semibold">นายเอนก ชื่นอารมณ์</span>
+        </div>
+        <div id="kaset_actions" class="grid grid-cols-2 gap-3"></div>
+        <p class="text-[10px] text-[#b8860b] bg-[#ffbf46]/10 p-2 rounded border border-[#ffbf46]/20">
+          💡 หากเลือก <b>เข้าร่วม/กล่าวรายงาน/นำทีม</b> กรุณาระบุชื่อ "ประธานในพิธี" ลงในช่องเนื้อหาข่าวด้วย
+        </p>
+      </div>
+    </div>
 
-        const GROUPS = [
-            "กลุ่มยุทธศาสตร์และสารสนเทศ",
-            "กลุ่มส่งเสริมและพัฒนาการผลิต",
-            "กลุ่มส่งเสริมและพัฒนาเกษตรกร",
-            "กลุ่มอารักขาพืช",
-            "ฝ่ายบริหารทั่วไป"
-        ];
-        const DISTRICTS = ["เมืองกาญจนบุรี", "ไทรโยค", "บ่อพลอย", "ศรีสวัสดิ์", "ท่ามะกา", "ท่าม่วง", "ทองผาภูมิ", "สังขละบุรี", "พนมทวน", "เลาขวัญ", "ด่านมะขามเตี้ย", "หนองปรือ", "ห้วยกระเจา"];
+    <!-- 3: เจ้าของเรื่อง -->
+    <div class="card border-[#648381]">
+      <div class="card-head"><div class="num bg-[#648381]/20 text-[#648381]">3</div><h3 class="font-bold text-lg">เจ้าของเรื่อง</h3></div>
+      <div class="space-y-4">
+        <div>
+          <label class="lbl">สังกัด</label>
+          <select id="source_type" class="inp">
+            <option value="province">สำนักงานเกษตรจังหวัด</option>
+            <option value="district">สำนักงานเกษตรอำเภอ</option>
+          </select>
+        </div>
+        <div id="group_container" class="animate-fade-in">
+          <label class="lbl">กลุ่ม/ฝ่าย</label>
+          <select id="group_name" class="inp bg-white"></select>
+        </div>
+        <div id="district_container" class="hidden animate-fade-in">
+          <label class="lbl">อำเภอ</label>
+          <select id="district_name" class="inp bg-white"></select>
+        </div>
+        <div id="head_box" class="p-4 bg-[#ffbf46]/10 rounded-xl border border-[#ffbf46]/30">
+          <label class="text-sm font-bold mb-2 flex items-center gap-1">
+            ⭐ หัวหน้าคณะ <span class="text-[10px] font-normal bg-[#ffbf46] text-white px-2 py-0.5 rounded-full ml-auto">VIP</span>
+          </label>
+          <select id="head_officer_select" class="w-full px-3 py-2 bg-white border border-[#ffbf46] rounded-lg text-sm focus:ring-2 focus:ring-[#ffbf46] outline-none"></select>
+        </div>
+      </div>
+    </div>
 
-        let OFFICERS = [];
-        let files = [];
-        let userId = "guest";
-        let selectedOfficersMap = new Map();
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <!-- 4: ผู้ร่วมคณะ -->
+    <div id="team_card" class="card border-[#8acb88]">
+      <div class="card-head justify-between">
+        <div class="flex items-center gap-3"><div class="num bg-[#8acb88]/20 text-[#648381]">4</div><h3 class="font-bold text-lg">ผู้ร่วมคณะ</h3></div>
+        <span id="selected_count" class="text-[10px] font-bold bg-[#ffbf46] text-white px-2 py-1 rounded-full">เลือก 0 คน</span>
+      </div>
+      <div id="selected_summary_container" class="hidden p-3 bg-[#e4fde1] rounded-xl border border-[#8acb88]/30 mb-3 animate-fade-in">
+        <div id="selected_chips" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div class="flex gap-2 mb-3">
+        <select id="officer_group_filter" class="w-1/3 px-2 py-2.5 bg-[#f9fdf9] border border-[#648381]/20 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#8acb88]">
+          <option value="ALL">ทั้งหมด</option>
+        </select>
+        <div class="w-2/3 relative">
+          <input type="text" id="officer_search" placeholder="ค้นหาชื่อ..." class="w-full pl-9 pr-3 py-2.5 bg-[#f9fdf9] border border-[#648381]/20 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#8acb88]">
+          <span class="absolute left-3 top-2.5">🔍</span>
+        </div>
+      </div>
+      <div id="officer_list" class="h-60 overflow-y-auto border border-[#e4fde1] rounded-xl p-2 space-y-2 bg-[#f9fdf9] shadow-inner"></div>
+      <label class="flex items-center gap-3 p-3 mt-3 bg-[#e4fde1]/50 rounded-xl cursor-pointer hover:bg-[#e4fde1] transition">
+        <input type="checkbox" id="use_generic_term" class="h-5 w-5 rounded border-[#648381]/30">
+        <div>
+          <span class="block text-sm font-bold">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
+          <span class="block text-[10px] text-[#648381]">*ระบบติ๊กอัตโนมัติเมื่อ > 3 คน</span>
+        </div>
+      </label>
+    </div>
 
-        document.getElementById('activity_date').valueAsDate = new Date();
+    <!-- 5: เนื้อหา & รูปภาพ -->
+    <div class="card border-[#ffbf46]">
+      <div class="card-head"><div class="num bg-[#ffbf46]/20 text-[#ffbf46]">5</div><h3 class="font-bold text-lg">เนื้อหา &amp; รูปภาพ</h3></div>
+      <p id="summary_hint" class="hidden text-[11px] text-[#648381] bg-[#e4fde1]/60 p-2 rounded-lg mb-2">💡 ใส่ประเด็นสำคัญให้ครบ เช่น ข้อควรทำ/ไม่ควรทำ วันเวลา สถานที่ ช่องทางติดต่อ (ถ้ามี) ระบบจะเรียบเรียงให้น่าอ่านและใส่อิโมจิ/แฮชแท็กให้เอง จะไม่เติมข้อมูลที่ไม่ได้ใส่มา</p>
+      <textarea id="summary" rows="6" class="w-full p-4 border border-[#8acb88]/30 rounded-2xl focus:ring-2 focus:ring-[#ffbf46] outline-none bg-[#f9fdf9] shadow-inner mb-4"></textarea>
+      <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#ffbf46]/50 rounded-2xl cursor-pointer bg-[#ffbf46]/5 hover:bg-[#ffbf46]/10 hover:border-[#ffbf46] transition text-[#d99a1c]">
+        <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <p id="image_label" class="text-sm font-medium">เพิ่มรูปภาพประกอบ (สูงสุด 15 รูป)</p>
+        <input type="file" id="images" multiple accept="image/*" class="hidden">
+      </label>
+      <div id="image_preview" class="grid grid-cols-3 gap-3 mt-4"></div>
+    </div>
 
-        (async () => {
-            try {
-                try {
-                    await liff.init({ liffId: LIFF_ID });
-                    if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId;
-                    else liff.login();
-                } catch(e) { console.warn('Dev Mode'); }
+    <div class="pt-4 pb-8 sticky bottom-0 z-10">
+      <div class="absolute inset-0 bg-gradient-to-t from-[#e4fde1] via-[#e4fde1]/90 to-transparent -z-10 pointer-events-none"></div>
+      <button type="submit" id="submit_btn" class="w-full py-4 bg-gradient-to-r from-[#8acb88] to-[#ffbf46] rounded-2xl font-bold text-lg shadow-lg shadow-[#8acb88]/40 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100">
+        <span>🚀</span><span id="btn_text">ส่งข้อมูลให้ AI ประมวลผล</span>
+      </button>
+    </div>
+    <p class="text-center text-xs text-[#648381] pb-8 opacity-70">สำนักงานเกษตรจังหวัดกาญจนบุรี</p>
+  </form>
+</div>
 
-                document.getElementById('loading-text').innerText = 'กำลังดึงรายชื่อเจ้าหน้าที่...';
-                await fetchOfficersFromSheet();
-                initDropdowns();
-                renderOfficers(OFFICERS);
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-            } catch (err) { alert('Error: ' + err.message); }
-        })();
+<script>
+// ===== CONFIG =====
+const LIFF_ID = '2008873330-48xvsQ9g';
+const WEBHOOK_URL = 'https://hook.us2.make.com/9r5ohk6m95st7v34u32vxqk8na6wefiz';
+const SUPABASE_URL = 'https://ngreqaszduphwftwswdj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmVxYXN6ZHVwaHdmdHdzd2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMTcyNTMsImV4cCI6MjA3NTY5MzI1M30.balzxiWXum4lnl6dCrNzSoF02tRfmG19rEqMnHSynwk';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQA5WsMKHm9yiBhlLYyBPy4R71gfSzdQCpjzdg_wLL97RaWjQGfCzPie84oBFvqR3cdRWMuFVyVpu0f/pub?gid=0&single=true&output=csv';
 
-        async function fetchOfficersFromSheet() {
-            try {
-                const res = await fetch(SHEET_CSV_URL);
-                if (!res.ok) throw new Error('ลิงก์ Google Sheet ผิดพลาด');
-                const text = await res.text();
-                if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('กรุณากด Publish to Web เป็น CSV ก่อนครับ');
-                
-                const rows = text.split('\n').map(r => r.trim()).filter(r => r);
-                OFFICERS = rows.slice(1).map(row => {
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    const clean = (t) => t ? t.replace(/^"|"$/g, '').trim() : "";
-                    return {
-                        name: clean(cols[0]),
-                        position: clean(cols[1]),
-                        group: clean(cols[2]),
-                        is_head: clean(cols[3]).toUpperCase() === 'TRUE'
-                    };
-                });
-            } catch (e) { console.error(e); OFFICERS = []; }
-        }
+const GROUPS = ["กลุ่มยุทธศาสตร์และสารสนเทศ","กลุ่มส่งเสริมและพัฒนาการผลิต","กลุ่มส่งเสริมและพัฒนาเกษตรกร","กลุ่มอารักขาพืช","ฝ่ายบริหารทั่วไป"];
+const DISTRICTS = ["เมืองกาญจนบุรี","ไทรโยค","บ่อพลอย","ศรีสวัสดิ์","ท่ามะกา","ท่าม่วง","ทองผาภูมิ","สังขละบุรี","พนมทวน","เลาขวัญ","ด่านมะขามเตี้ย","หนองปรือ","ห้วยกระเจา"];
+const KASET_ACTIONS = [
+  ['chair','👑','เป็นประธาน<br>ลงพื้นที่'], ['assign','👈','มอบหมาย'],
+  ['join_solo','🙋‍♂️','เข้าร่วม<br>(ส่วนตัว)'], ['report','🎤','กล่าวรายงาน'],
+  ['lead_join','👥','นำทีมเข้าร่วม<br>(มีประธาน)'], ['lead_organize','🏗️','นำทีมจัดงาน<br>(มีประธาน)']
+];
+const KASET_NAME = 'นายเอนก ชื่นอารมณ์';
+const REQUIRED_HASHTAG = '#เกษตรกาญจน์';
 
-        function initDropdowns() {
-            const gSel = document.getElementById('group_name');
-            GROUPS.forEach(g => gSel.innerHTML += `<option value="${g}">${g}</option>`);
-            
-            const fSel = document.getElementById('officer_group_filter');
-            GROUPS.forEach(g => fSel.innerHTML += `<option value="${g}">${g}</option>`);
+const MAX_IMAGES = 15;
+const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+let OFFICERS = [];
+let files = [];
+let userId = 'guest';
+const selected = new Map();
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const getType = () => document.querySelector('input[name="post_type"]:checked').value;
 
-            const dSel = document.getElementById('district_name');
-            DISTRICTS.forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
-            
-            updateHeadList();
-        }
+// วันที่ตามเวลาท้องถิ่น (กันเลื่อนเป็นเมื่อวานช่วงเช้ามืด)
+(() => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); $('activity_date').value = d.toISOString().slice(0, 10); })();
 
-        function updateHeadList() {
-            const grp = document.getElementById('group_name').value;
-            const hSel = document.getElementById('head_officer_select');
-            hSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
+// ===== INIT =====
+(async () => {
+  try {
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId;
+      else liff.login();
+    } catch (e) { console.warn('Dev Mode', e); }
 
-            const opt1 = document.createElement('option');
-            opt1.value = "ALL_HEADS_ADMIN";
-            opt1.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป";
-            hSel.appendChild(opt1);
+    $('loading-text').innerText = 'กำลังดึงรายชื่อเจ้าหน้าที่...';
+    await fetchOfficers();
+    buildStaticUI();
+    updateHeadList();
+    applyPostType();
+    filterList();
+    $('loading-screen').classList.add('hidden');
+    $('app').classList.remove('hidden');
+  } catch (err) { alert('Error: ' + err.message); }
+})();
 
-            const opt2 = document.createElement('option');
-            opt2.value = "ALL_HEADS_ONLY";
-            opt2.textContent = "✨ หัวหน้ากลุ่มทุกกลุ่ม";
-            hSel.appendChild(opt2);
+async function fetchOfficers() {
+  try {
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error('ลิงก์ Google Sheet ผิดพลาด');
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('กรุณากด Publish to Web เป็น CSV ก่อนครับ');
+    const clean = (t) => t ? t.replace(/^"|"$/g, '').trim() : '';
+    OFFICERS = text.split('\n').map(r => r.trim()).filter(Boolean).slice(1).map(row => {
+      const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+      return { name: clean(c[0]), position: clean(c[1]), group: clean(c[2]), is_head: clean(c[3]).toUpperCase() === 'TRUE' };
+    }).filter(o => o.name);
+  } catch (e) {
+    console.error(e);
+    OFFICERS = [];
+    alert('⚠️ โหลดรายชื่อเจ้าหน้าที่ไม่สำเร็จ: ' + e.message);
+  }
+}
 
-            const heads = OFFICERS.filter(o => o.group === grp && o.is_head);
-            heads.forEach(h => {
-                const opt = document.createElement('option');
-                opt.value = JSON.stringify(h);
-                opt.textContent = h.name;
-                hSel.appendChild(opt);
-            });
-        }
+function buildStaticUI() {
+  $('kaset_actions').innerHTML = KASET_ACTIONS.map(([v, ico, txt], i) => `
+    <div><input type="radio" name="kaset_action" id="action_${v}" value="${v}" class="kaset-radio hidden" ${i === 0 ? 'checked' : ''}>
+    <label for="action_${v}" class="opt"><span class="text-xl mb-1">${ico}</span><span class="text-xs font-bold">${txt}</span></label></div>`).join('') + `
+    <div class="col-span-2"><input type="radio" name="kaset_action" id="action_none" value="none" class="kaset-radio hidden">
+    <label for="action_none" class="block text-center p-2 border border-dashed border-[#648381]/30 rounded-xl cursor-pointer hover:bg-[#e4fde1]/50 text-xs text-[#648381] transition">❌ ไม่ต้องกล่าวถึงในข่าวนี้</label></div>`;
+  const opts = (arr) => arr.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  $('group_name').innerHTML = opts(GROUPS);
+  $('district_name').innerHTML = opts(DISTRICTS);
+  $('officer_group_filter').innerHTML = '<option value="ALL">ทั้งหมด</option>' + opts(GROUPS);
+}
 
-        function renderOfficers(list) {
-            const div = document.getElementById('officer_list');
-            div.innerHTML = '';
-            
-            const sortedList = list.sort((a, b) => (a.is_head === b.is_head) ? 0 : a.is_head ? -1 : 1);
+// ===== โหมดข่าว =====
+function applyPostType() {
+  const pr = getType() === 'pr';
+  // โหมดประชาสัมพันธ์: ซ่อนวันที่/สถานที่, เกษตรจังหวัด, หัวหน้าคณะ, ผู้ร่วมคณะ
+  ['basic_card', 'kaset_card', 'head_box', 'team_card'].forEach(id => $(id).classList.toggle('hidden', pr));
+  $('type_hint').classList.toggle('hidden', !pr);
+  $('summary_hint').classList.toggle('hidden', !pr);
+  $('lbl_date').innerText = 'วันที่ปฏิบัติงาน';
+  $('lbl_location').innerText = 'สถานที่';
+  $('summary').rows = pr ? 10 : 6;
+  $('summary').placeholder = pr
+    ? '📝 วางข้อความหรือประเด็นที่ต้องการประชาสัมพันธ์ เช่น\n- เรื่องที่ต้องการแจ้ง\n- ข้อควรทำ / ข้อควรระวัง\n- วันเวลา สถานที่ ช่องทางติดต่อ (ถ้ามี)'
+    : '📝 สรุปประเด็นสำคัญ...\n(⚠️ หากเลือก เข้าร่วม/กล่าวรายงาน/นำทีม โปรดระบุชื่อประธานในพิธีด้วย)';
+  $(pr ? 'action_none' : 'action_chair').checked = true;
+  // เรียงเลขหัวข้อใหม่เฉพาะการ์ดที่แสดงอยู่ (ไม่นับการ์ดเลือกประเภท)
+  let n = 1;
+  document.querySelectorAll('#newsForm .card').forEach((c, i) => {
+    if (i === 0 || c.classList.contains('hidden')) return;
+    const num = c.querySelector('.num'); if (num) num.textContent = n++;
+  });
+}
+document.querySelectorAll('input[name="post_type"]').forEach(r => r.addEventListener('change', applyPostType));
 
-            if(sortedList.length === 0) {
-                 div.innerHTML = '<div class="text-center text-[#648381]/70 p-8 text-sm">ไม่พบรายชื่อในกลุ่มนี้</div>';
-                 return;
-            }
+// ===== หัวหน้าคณะ =====
+function updateHeadList() {
+  const isDist = $('source_type').value === 'district';
+  const grp = $('group_name').value;
+  const sel = $('head_officer_select');
+  sel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' +
+    '<option value="ALL_HEADS_ADMIN">✨ หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป</option>' +
+    '<option value="ALL_HEADS_ONLY">✨ หัวหน้ากลุ่มทุกกลุ่ม</option>';
+  OFFICERS.filter(o => o.is_head && (isDist || o.group === grp)).forEach(h => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(h);
+    opt.textContent = h.name;
+    sel.appendChild(opt);
+  });
+}
+$('group_name').addEventListener('change', updateHeadList);
+$('source_type').addEventListener('change', (e) => {
+  const isDist = e.target.value === 'district';
+  $('district_container').classList.toggle('hidden', !isDist);
+  $('group_container').classList.toggle('hidden', isDist);
+  updateHeadList();
+});
 
-            sortedList.forEach((o) => {
-                const uid = `off_${Math.random().toString(36).substr(2,9)}`;
-                const isChecked = selectedOfficersMap.has(o.name);
-                
-                const bgClass = o.is_head ? "bg-[#ffbf46]/10 border-[#ffbf46]/30" : "bg-white hover:bg-[#e4fde1]/30 border-[#648381]/10";
-                const headBadge = o.is_head ? '<span class="text-[9px] bg-[#ffbf46] text-white px-1.5 py-0.5 rounded shadow-sm ml-2 tracking-wide uppercase">หัวหน้า</span>' : '';
-                
-                div.innerHTML += `
-                    <div class="flex items-center gap-3 p-3 rounded-xl border ${bgClass} transition mb-2">
-                        <input type="checkbox" id="${uid}" 
-                            value='${JSON.stringify({name:o.name, position:o.position})}' 
-                            class="chk-officer h-5 w-5 text-[#8acb88] rounded focus:ring-[#8acb88] border-[#648381]/30 cursor-pointer"
-                            ${isChecked ? 'checked' : ''}
-                            onchange="toggleOfficer(this)">
-                        <label for="${uid}" class="text-sm cursor-pointer w-full select-none">
-                            <div class="font-bold text-[#575761] flex items-center">
-                                ${o.name} ${headBadge}
-                            </div>
-                            <div class="text-xs text-[#648381]/80 mt-0.5 font-light">${o.position}</div>
-                        </label>
-                    </div>`;
-            });
-        }
+// ===== ผู้ร่วมคณะ =====
+function filterList() {
+  const val = $('officer_group_filter').value;
+  const term = $('officer_search').value.toLowerCase();
+  let list = OFFICERS.filter(o => (val === 'ALL' || o.group === val) && (!term || o.name.toLowerCase().includes(term)));
+  list = [...list].sort((a, b) => (a.is_head === b.is_head) ? 0 : a.is_head ? -1 : 1);
+  const div = $('officer_list');
+  if (!list.length) { div.innerHTML = '<div class="text-center text-[#648381]/70 p-8 text-sm">ไม่พบรายชื่อ</div>'; return; }
+  div.innerHTML = list.map((o, i) => {
+    const bg = o.is_head ? 'bg-[#ffbf46]/10 border-[#ffbf46]/30' : 'bg-white hover:bg-[#e4fde1]/30 border-[#648381]/10';
+    const badge = o.is_head ? '<span class="text-[9px] bg-[#ffbf46] text-white px-1.5 py-0.5 rounded ml-2 uppercase">หัวหน้า</span>' : '';
+    return `<div class="flex items-center gap-3 p-3 rounded-xl border ${bg} transition">
+      <input type="checkbox" id="off_${i}" data-name="${esc(o.name)}" data-pos="${esc(o.position)}" class="chk-officer h-5 w-5 rounded border-[#648381]/30 cursor-pointer" ${selected.has(o.name) ? 'checked' : ''}>
+      <label for="off_${i}" class="text-sm cursor-pointer w-full select-none">
+        <div class="font-bold flex items-center">${esc(o.name)} ${badge}</div>
+        <div class="text-xs text-[#648381]/80 mt-0.5 font-light">${esc(o.position)}</div>
+      </label></div>`;
+  }).join('');
+}
+$('officer_group_filter').addEventListener('change', filterList);
+$('officer_search').addEventListener('input', filterList);
 
-        window.toggleOfficer = (checkbox) => {
-            const data = JSON.parse(checkbox.value);
-            if(checkbox.checked) selectedOfficersMap.set(data.name, data);
-            else selectedOfficersMap.delete(data.name);
-            updateSelectedDisplay();
-        };
+$('officer_list').addEventListener('change', (e) => {
+  const cb = e.target.closest('.chk-officer');
+  if (!cb) return;
+  if (cb.checked) selected.set(cb.dataset.name, { name: cb.dataset.name, position: cb.dataset.pos });
+  else selected.delete(cb.dataset.name);
+  updateSelectedDisplay();
+});
 
-        function updateSelectedDisplay() {
-            const container = document.getElementById('selected_summary_container');
-            const chipsDiv = document.getElementById('selected_chips');
-            const countLabel = document.getElementById('selected_count');
-            
-            chipsDiv.innerHTML = '';
-            if(selectedOfficersMap.size > 0) {
-                container.classList.remove('hidden');
-                selectedOfficersMap.forEach((val, key) => {
-                    chipsDiv.innerHTML += `
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-[#8acb88] text-white animate-fade-in shadow-sm">
-                            ${key}
-                            <button type="button" onclick="removeOfficer('${key}')" class="ml-1.5 text-[#575761] hover:text-white font-bold bg-white/30 rounded-full w-4 h-4 flex items-center justify-center">×</button>
-                        </span>`;
-                });
-            } else container.classList.add('hidden');
-            
-            countLabel.innerText = `เลือก ${selectedOfficersMap.size} คน`;
-            const genericCheck = document.getElementById('use_generic_term');
-            if(selectedOfficersMap.size > 3) genericCheck.checked = true;
-        }
+$('selected_chips').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-name]');
+  if (!btn) return;
+  selected.delete(btn.dataset.name);
+  updateSelectedDisplay();
+  filterList();
+});
 
-        window.removeOfficer = (name) => {
-            selectedOfficersMap.delete(name);
-            updateSelectedDisplay();
-            const filterVal = document.getElementById('officer_group_filter').value;
-            const term = document.getElementById('officer_search').value.toLowerCase();
-            let currentList = OFFICERS;
-            if(filterVal !== 'ALL') currentList = currentList.filter(o => o.group === filterVal);
-            if(term) currentList = currentList.filter(o => o.name.toLowerCase().includes(term));
-            renderOfficers(currentList);
-        };
+function updateSelectedDisplay() {
+  const has = selected.size > 0;
+  $('selected_summary_container').classList.toggle('hidden', !has);
+  $('selected_chips').innerHTML = [...selected.keys()].map(k => `
+    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-[#8acb88] text-white shadow-sm">${esc(k)}
+      <button type="button" data-name="${esc(k)}" class="ml-1.5 text-[#575761] hover:text-white font-bold bg-white/30 rounded-full w-4 h-4 flex items-center justify-center">×</button>
+    </span>`).join('');
+  $('selected_count').innerText = `เลือก ${selected.size} คน`;
+  if (selected.size > 3) $('use_generic_term').checked = true;
+}
 
-        document.getElementById('group_name').addEventListener('change', () => updateHeadList());
-        document.getElementById('officer_group_filter').addEventListener('change', (e) => filterList());
-        document.getElementById('officer_search').addEventListener('input', (e) => filterList());
+// ===== รูปภาพ =====
+function renderPreview() {
+  $('image_preview').innerHTML = '';
+  files.forEach((f, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'relative animate-fade-in';
+    wrap.innerHTML = `<img class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm">
+      <button type="button" class="absolute -top-2 -right-2 bg-[#ffbf46] w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition border-2 border-white font-bold">✕</button>`;
+    wrap.querySelector('img').src = URL.createObjectURL(f);
+    wrap.querySelector('button').onclick = () => { files.splice(i, 1); renderPreview(); };
+    $('image_preview').appendChild(wrap);
+  });
+  $('image_label').innerText = `เพิ่มรูปภาพประกอบ (${files.length}/${MAX_IMAGES} รูป)`;
+}
 
-        function filterList() {
-            const val = document.getElementById('officer_group_filter').value;
-            const term = document.getElementById('officer_search').value.toLowerCase();
-            let filtered = OFFICERS;
-            if(val !== 'ALL') filtered = filtered.filter(o => o.group === val);
-            if(term) filtered = filtered.filter(o => o.name.toLowerCase().includes(term));
-            renderOfficers(filtered);
-        }
+$('images').addEventListener('change', async (e) => {
+  const picked = Array.from(e.target.files);
+  e.target.value = '';
+  const remaining = MAX_IMAGES - files.length;
+  if (remaining <= 0) return alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูป`);
+  if (picked.length > remaining) alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูป ระบบจะใช้เพียง ${remaining} รูปแรกที่เลือก`);
+  $('image_label').innerText = '⚡ กำลังบีบอัดรูปภาพ...';
+  for (const f of picked.slice(0, remaining)) {
+    try { files.push(await resizeImage(f, 1280, 0.8)); }
+    catch (err) { console.error('Resize error:', err); }
+  }
+  renderPreview();
+});
 
-        document.getElementById('source_type').addEventListener('change', (e) => {
-            const isDist = e.target.value === 'district';
-            document.getElementById('district_container').className = isDist ? 'animate-fade-in' : 'hidden';
-            document.getElementById('group_container').className = isDist ? 'hidden' : 'animate-fade-in';
-        });
+function resizeImage(file, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) return reject(new Error('Not an image'));
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b => b ? resolve(new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' })) : reject(new Error('Canvas is empty')), 'image/jpeg', quality);
+    };
+    img.onerror = () => reject(new Error('Image load failed'));
+    img.src = url;
+  });
+}
 
-        document.getElementById('images').addEventListener('change', async (e) => {
-            const newFiles = Array.from(e.target.files);
-            const pv = document.getElementById('image_preview');
-            const loadingId = 'loading-' + Date.now();
-            pv.innerHTML += `<div id="${loadingId}" class="text-xs text-[#648381] col-span-3 text-center py-4 bg-[#e4fde1] rounded-xl animate-pulse border border-[#8acb88]/30">⚡ กำลังบีบอัดรูปภาพ...</div>`;
+// ===== ส่งข้อมูล =====
+$('newsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('submit_btn'), btnText = $('btn_text');
+  const isPR = getType() === 'pr';
 
-            for (let file of newFiles) {
-                try {
-                    const resizedFile = await resizeImage(file, 1280, 0.8); 
-                    files.push(resizedFile);
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const loader = document.getElementById(loadingId);
-                        if(loader) loader.remove();
-                        const i = files.length - 1;
-                        pv.innerHTML += `
-                            <div class="relative group animate-fade-in">
-                                <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm">
-                                <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-[#ffbf46] text-[#575761] w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition border-2 border-white font-bold">✕</button>
-                            </div>`;
-                    };
-                    reader.readAsDataURL(resizedFile);
-                } catch (err) { console.error('Resize error:', err); }
-            }
-        });
+  if (!isPR && !$('activity_date').value) return alert('📅 กรุณาเลือกวันที่ครับ');
+  if (!isPR && !$('location').value.trim()) return alert('📍 กรุณาระบุสถานที่ครับ');
+  if (!$('summary').value.trim()) return alert('📝 กรุณาใส่เนื้อหาข่าวครับ');
+  if (files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
+  if (files.length > MAX_IMAGES) return alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูปครับ`);
 
-        window.rmImg = (index) => { 
-            files.splice(index, 1); 
-            const pv = document.getElementById('image_preview');
-            pv.innerHTML = '';
-            files.forEach((f, i) => {
-                const r = new FileReader();
-                r.onload = (ev) => {
-                    pv.innerHTML += `
-                        <div class="relative group animate-fade-in">
-                            <img src="${ev.target.result}" class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm">
-                            <button type="button" onclick="rmImg(${i})" class="absolute -top-2 -right-2 bg-[#ffbf46] text-[#575761] w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition border-2 border-white font-bold">✕</button>
-                        </div>`;
-                }
-                r.readAsDataURL(f);
-            });
-        };
+  btn.disabled = true;
+  try {
+    const urls = [];
+    for (let i = 0; i < files.length; i++) {
+      btnText.innerHTML = `☁️ กำลังอัปโหลด... ${Math.round(i / files.length * 100)}%`;
+      const fname = `news-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+      const { error } = await sb.storage.from('news-images').upload(fname, files[i], { contentType: 'image/jpeg' });
+      if (error) throw error;
+      urls.push(sb.storage.from('news-images').getPublicUrl(fname).data.publicUrl);
+    }
+    btnText.innerHTML = '📨 กำลังส่งข้อมูล... 100%';
 
-        function resizeImage(file, maxWidth, quality) {
-            return new Promise((resolve, reject) => {
-                if (!file.type.match(/image.*/)) { reject(new Error("Not an image")); return; }
-                const reader = new FileReader();
-                reader.onload = (readerEvent) => {
-                    const image = new Image();
-                    image.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = image.width;
-                        let height = image.height;
-                        if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(image, 0, 0, width, height);
-                        canvas.toBlob((blob) => {
-                            if (!blob) { reject(new Error("Canvas is empty")); return; }
-                            const resizedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
-                            resolve(resizedFile);
-                        }, 'image/jpeg', quality);
-                    };
-                    image.src = readerEvent.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+    const kasetAction = isPR ? 'none' : document.querySelector('input[name="kaset_action"]:checked').value;
+    let headData = null;
+    const hv = isPR ? '' : $('head_officer_select').value;
+    if (hv === 'ALL_HEADS_ADMIN') headData = { name: 'หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป', position: '', is_all: true };
+    else if (hv === 'ALL_HEADS_ONLY') headData = { name: 'หัวหน้ากลุ่มทุกกลุ่ม', position: '', is_all: true };
+    else if (hv) { headData = JSON.parse(hv); headData.is_all = false; }
 
-        document.getElementById('newsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submit_btn');
-            const btnText = document.getElementById('btn_text');
-            if(files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
+    const officers = isPR ? [] : [...selected.values()];
+    const useGeneric = $('use_generic_term').checked || officers.length > 3;
+    const sourceType = $('source_type').value;
+    // ผู้ร่วมคณะพร้อมตำแหน่ง: "ชื่อ | ตำแหน่ง ; ชื่อ | ตำแหน่ง"
+    const officersText = useGeneric ? '' : officers.map(o => o.position ? `${o.name} | ${o.position}` : o.name).join(' ; ');
+    // วันที่ภาษาไทย (พ.ศ.) เช่น 12 พฤศจิกายน 2569
+    const [yy, mm, dd] = $('activity_date').value.split('-').map(Number);
+    const dateThai = `${dd} ${THAI_MONTHS[mm - 1]} ${yy + 543}`;
 
-            btn.disabled = true;
-            btn.classList.add('btn-modern', 'from-[#8acb88]', 'to-[#ffbf46]');
-            
-            try {
-                const urls = [];
-                for (let i = 0; i < files.length; i++) {
-                    const f = files[i];
-                    const percent = Math.round(((i) / files.length) * 100);
-                    btnText.innerHTML = `☁️ กำลังอัปโหลด... ${percent}%`;
+    let accessToken = '';
+    try { accessToken = liff.getAccessToken() || ''; } catch (_) {}
 
-                    const fname = `news-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-                    const { error } = await sb.storage.from('news-images').upload(fname, f);
-                    if(error) throw error;
-                    const { data } = sb.storage.from('news-images').getPublicUrl(fname);
-                    urls.push(data.publicUrl);
-                }
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        access_token: accessToken,
+        post_type: getType(),                    // "field" | "pr"
+        required_hashtag: REQUIRED_HASHTAG,
+        hashtag_count: 5,
+        date: $('activity_date').value,
+        date_thai: dateThai,
+        location: isPR ? '' : $('location').value.trim(),
+        source: sourceType,
+        group: sourceType === 'province' ? $('group_name').value : '',
+        district: sourceType === 'district' ? $('district_name').value : '',
+        kaset_action: kasetAction,
+        kaset_name: KASET_NAME,
+        head_officer: headData,
+        officers,
+        officers_text: officersText,
+        use_generic_term: useGeneric,
+        summary: $('summary').value.trim(),
+        imageUrls: urls
+      })
+    });
+    if (!res.ok) throw new Error('Make Webhook Error (' + res.status + ')');
 
-                btnText.innerHTML = `📨 กำลังส่งข้อมูล... 100%`;
-
-                const kasetAction = document.querySelector('input[name="kaset_action"]:checked').value;
-                let headData = null;
-                const headVal = document.getElementById('head_officer_select').value;
-                if(headVal === "ALL_HEADS_ADMIN") headData = { name: "หัวหน้ากลุ่มทุกกลุ่มและหัวหน้าฝ่ายบริหารทั่วไป", position: "", is_all: true };
-                else if(headVal === "ALL_HEADS_ONLY") headData = { name: "หัวหน้ากลุ่มทุกกลุ่ม", position: "", is_all: true };
-                else if(headVal) { headData = JSON.parse(headVal); headData.is_all = false; }
-
-                const selectedOfficers = Array.from(selectedOfficersMap.values());
-                let useGeneric = document.getElementById('use_generic_term').checked;
-                if (selectedOfficers.length > 3) useGeneric = true;
-
-                // --- LOGIC แก้ไขค่า District และ Group ตรงนี้ ---
-                const sourceType = document.getElementById('source_type').value;
-                const districtVal = (sourceType === 'district') ? document.getElementById('district_name').value : ""; 
-                const groupVal = (sourceType === 'province') ? document.getElementById('group_name').value : "";
-                // ---------------------------------------------
-
-                const res = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        userId,
-                        date: document.getElementById('activity_date').value,
-                        location: document.getElementById('location').value,
-                        source: sourceType,
-                        group: groupVal,
-                        district: districtVal,
-                        kaset_action: kasetAction,
-                        kaset_name: document.getElementById('kaset_name').value,
-                        head_officer: headData,
-                        officers: selectedOfficers,
-                        use_generic_term: useGeneric,
-                        summary: document.getElementById('summary').value,
-                        imageUrls: urls
-                    })
-                });
-
-                if(!res.ok) throw new Error('Make Webhook Error');
-                alert('✅ ส่งข้อมูลสำเร็จ! ระบบกำลังเขียนข่าวให้ครับ');
-                liff.closeWindow();
-
-            } catch(err) {
-                console.error(err);
-                alert('เกิดข้อผิดพลาด: ' + err.message);
-                btn.disabled = false;
-                btn.classList.remove('btn-modern');
-                btnText.innerHTML = 'ลองใหม่อีกครั้ง';
-            }
-        });
-    </script>
+    alert('✅ ส่งข้อมูลสำเร็จ! ระบบกำลังเขียนข่าวให้ครับ');
+    try { if (liff.isInClient()) liff.closeWindow(); } catch (_) {}
+    btnText.innerHTML = '✅ ส่งแล้ว';
+  } catch (err) {
+    console.error(err);
+    alert('เกิดข้อผิดพลาด: ' + (err.message || err));
+    btn.disabled = false;
+    btnText.innerHTML = 'ลองใหม่อีกครั้ง';
+  }
+});
+</script>
 </body>
 </html>
