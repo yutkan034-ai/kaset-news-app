@@ -54,23 +54,39 @@
 
   <form id="newsForm" class="px-5 space-y-6">
 
-    <!-- 0: ประเภทข่าว -->
-    <div class="card border-[#575761]">
-      <div class="card-head"><div class="num bg-[#575761]/10 text-[#575761]">0</div><h3 class="font-bold text-lg">เลือกประเภทข่าว</h3></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <input type="radio" name="post_type" id="type_field" value="field" class="kaset-radio hidden" checked>
-          <label for="type_field" class="opt"><span class="text-2xl mb-1">📍</span><span class="text-xs font-bold">ข่าวลงพื้นที่</span></label>
-        </div>
-        <div>
-          <input type="radio" name="post_type" id="type_pr" value="pr" class="kaset-radio hidden">
-          <label for="type_pr" class="opt"><span class="text-2xl mb-1">📣</span><span class="text-xs font-bold">ข่าวประชาสัมพันธ์</span></label>
-        </div>
+    <!-- 0: เลือกประเภทข่าว (แสดงก่อนเสมอ) -->
+    <div id="type_gate" class="space-y-4 animate-fade-in">
+      <div class="text-center pt-2">
+        <h2 class="text-xl font-bold">วันนี้จะส่งข่าวประเภทไหน?</h2>
+        <p class="text-xs text-[#648381] mt-1">เลือกประเภทก่อน ระบบจะแสดงช่องกรอกที่เหมาะสมให้</p>
       </div>
-      <p id="type_hint" class="hidden mt-3 text-[11px] text-[#648381] bg-[#e4fde1]/60 p-2 rounded-lg">
-        ✨ ระบบจะเขียนโพสต์ให้น่าสนใจ พร้อมอิโมจิ และแฮชแท็ก 5 อัน (มี #เกษตรกาญจน์ เสมอ)
-      </p>
+      <button type="button" data-type="field" class="type-btn w-full text-left bg-white rounded-2xl shadow-md border-2 border-transparent hover:border-[#8acb88] active:scale-[0.98] transition p-5 flex items-center gap-4">
+        <span class="text-4xl">📍</span>
+        <span>
+          <span class="block font-bold text-lg">ข่าวลงพื้นที่</span>
+          <span class="block text-xs text-[#648381] mt-0.5">รายงานการลงพื้นที่/กิจกรรม ระบุวันที่ สถานที่ เกษตรจังหวัด และผู้ร่วมคณะ</span>
+        </span>
+      </button>
+      <button type="button" data-type="pr" class="type-btn w-full text-left bg-white rounded-2xl shadow-md border-2 border-transparent hover:border-[#ffbf46] active:scale-[0.98] transition p-5 flex items-center gap-4">
+        <span class="text-4xl">📣</span>
+        <span>
+          <span class="block font-bold text-lg">ข่าวประชาสัมพันธ์</span>
+          <span class="block text-xs text-[#648381] mt-0.5">แจ้งข่าวสาร ข้อควรปฏิบัติ หรือประกาศ ใส่เพียงเนื้อหากับรูปภาพ ระบบเรียบเรียงและใส่อิโมจิ/แฮชแท็กให้</span>
+        </span>
+      </button>
+      <input type="radio" name="post_type" id="type_field" value="field" class="hidden">
+      <input type="radio" name="post_type" id="type_pr" value="pr" class="hidden">
     </div>
+
+    <div id="type_bar" class="hidden flex items-center justify-between bg-white rounded-2xl shadow-sm px-4 py-3 border-l-[6px] border-[#575761]">
+      <div class="text-sm"><span class="text-[#648381]">ประเภทข่าว:</span> <b id="type_name"></b></div>
+      <button type="button" id="type_change" class="text-xs font-bold text-[#648381] bg-[#e4fde1] hover:bg-[#8acb88]/40 rounded-full px-3 py-1.5 transition">เปลี่ยน</button>
+    </div>
+
+    <div id="form_body" class="hidden space-y-6">
+    <p id="type_hint" class="hidden text-[11px] text-[#648381] bg-[#e4fde1]/60 p-2 rounded-lg">
+      ✨ ระบบจะเขียนโพสต์ให้น่าสนใจ พร้อมอิโมจิ และแฮชแท็ก 5 อัน (มี #เกษตรกาญจน์ เสมอ)
+    </p>
 
     <!-- 1: ข้อมูลพื้นฐาน -->
     <div id="basic_card" class="card border-[#8acb88]">
@@ -152,7 +168,7 @@
         <input type="checkbox" id="use_generic_term" class="h-5 w-5 rounded border-[#648381]/30">
         <div>
           <span class="block text-sm font-bold">ใช้คำว่า "พร้อมด้วยเจ้าหน้าที่"</span>
-          <span class="block text-[10px] text-[#648381]">*ระบบติ๊กอัตโนมัติเมื่อ > 3 คน</span>
+          <span class="block text-[10px] text-[#648381]">*ระบบติ๊กอัตโนมัติเมื่อ > 3 คน หากไม่ติ๊ก ข่าวจะระบุชื่อและตำแหน่งของทุกคนที่เลือก</span>
         </div>
       </label>
     </div>
@@ -176,6 +192,8 @@
         <span>🚀</span><span id="btn_text">ส่งข้อมูลให้ AI ประมวลผล</span>
       </button>
     </div>
+    </div><!-- /form_body -->
+
     <p class="text-center text-xs text-[#648381] pb-8 opacity-70">สำนักงานเกษตรจังหวัดกาญจนบุรี</p>
   </form>
 </div>
@@ -199,15 +217,22 @@ const KASET_NAME = 'นายเอนก ชื่นอารมณ์';
 const REQUIRED_HASHTAG = '#เกษตรกาญจน์';
 
 const MAX_IMAGES = 15;
+// ตั้งค่าการลดขนาดรูป
+const MAX_SIDE = 1280;             // ด้านที่ยาวที่สุดของรูป (พิกเซล)
+const TARGET_BYTES = 400 * 1024;   // ขนาดเป้าหมายต่อรูป ประมาณ 400 KB
+const MIN_QUALITY = 0.5;           // คุณภาพ JPEG ต่ำสุดที่ยอมลด
+const MIN_SIDE = 800;              // ย่อด้านยาวได้ต่ำสุดเท่านี้
+
 const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 let OFFICERS = [];
 let files = [];
 let userId = 'guest';
+let imageBusy = false;
 const selected = new Map();
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const getType = () => document.querySelector('input[name="post_type"]:checked').value;
+const getType = () => { const r = document.querySelector('input[name="post_type"]:checked'); return r ? r.value : ''; };
 
 // วันที่ตามเวลาท้องถิ่น (กันเลื่อนเป็นเมื่อวานช่วงเช้ามืด)
 (() => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); $('activity_date').value = d.toISOString().slice(0, 10); })();
@@ -263,6 +288,7 @@ function buildStaticUI() {
 }
 
 // ===== โหมดข่าว =====
+let lastType = '';
 function applyPostType() {
   const pr = getType() === 'pr';
   // โหมดประชาสัมพันธ์: ซ่อนวันที่/สถานที่, เกษตรจังหวัด, หัวหน้าคณะ, ผู้ร่วมคณะ
@@ -275,15 +301,32 @@ function applyPostType() {
   $('summary').placeholder = pr
     ? '📝 วางข้อความหรือประเด็นที่ต้องการประชาสัมพันธ์ เช่น\n- เรื่องที่ต้องการแจ้ง\n- ข้อควรทำ / ข้อควรระวัง\n- วันเวลา สถานที่ ช่องทางติดต่อ (ถ้ามี)'
     : '📝 สรุปประเด็นสำคัญ...\n(⚠️ หากเลือก เข้าร่วม/กล่าวรายงาน/นำทีม โปรดระบุชื่อประธานในพิธีด้วย)';
-  $(pr ? 'action_none' : 'action_chair').checked = true;
-  // เรียงเลขหัวข้อใหม่เฉพาะการ์ดที่แสดงอยู่ (ไม่นับการ์ดเลือกประเภท)
+  if (getType() !== lastType) { $(pr ? 'action_none' : 'action_chair').checked = true; lastType = getType(); }
+  // เรียงเลขหัวข้อใหม่เฉพาะการ์ดที่แสดงอยู่
   let n = 1;
-  document.querySelectorAll('#newsForm .card').forEach((c, i) => {
-    if (i === 0 || c.classList.contains('hidden')) return;
+  document.querySelectorAll('#form_body .card').forEach((c) => {
+    if (c.classList.contains('hidden')) return;
     const num = c.querySelector('.num'); if (num) num.textContent = n++;
   });
 }
-document.querySelectorAll('input[name="post_type"]').forEach(r => r.addEventListener('change', applyPostType));
+const TYPE_LABEL = { field: '📍 ข่าวลงพื้นที่', pr: '📣 ข่าวประชาสัมพันธ์' };
+function chooseType(t) {
+  $(t === 'pr' ? 'type_pr' : 'type_field').checked = true;
+  $('type_gate').classList.add('hidden');
+  $('type_bar').classList.remove('hidden');
+  $('type_name').textContent = TYPE_LABEL[t];
+  $('form_body').classList.remove('hidden');
+  applyPostType();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('.type-btn').forEach(b => b.addEventListener('click', () => chooseType(b.dataset.type)));
+// กด "เปลี่ยน" กลับไปเลือกประเภทใหม่ ข้อมูลที่กรอกไว้ไม่หาย
+$('type_change').addEventListener('click', () => {
+  $('type_gate').classList.remove('hidden');
+  $('type_bar').classList.add('hidden');
+  $('form_body').classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 // ===== หัวหน้าคณะ =====
 function updateHeadList() {
@@ -320,7 +363,7 @@ function filterList() {
     const bg = o.is_head ? 'bg-[#ffbf46]/10 border-[#ffbf46]/30' : 'bg-white hover:bg-[#e4fde1]/30 border-[#648381]/10';
     const badge = o.is_head ? '<span class="text-[9px] bg-[#ffbf46] text-white px-1.5 py-0.5 rounded ml-2 uppercase">หัวหน้า</span>' : '';
     return `<div class="flex items-center gap-3 p-3 rounded-xl border ${bg} transition">
-      <input type="checkbox" id="off_${i}" data-name="${esc(o.name)}" data-pos="${esc(o.position)}" class="chk-officer h-5 w-5 rounded border-[#648381]/30 cursor-pointer" ${selected.has(o.name) ? 'checked' : ''}>
+      <input type="checkbox" id="off_${i}" data-name="${esc(o.name)}" data-pos="${esc(o.position)}" data-group="${esc(o.group)}" class="chk-officer h-5 w-5 rounded border-[#648381]/30 cursor-pointer" ${selected.has(o.name) ? 'checked' : ''}>
       <label for="off_${i}" class="text-sm cursor-pointer w-full select-none">
         <div class="font-bold flex items-center">${esc(o.name)} ${badge}</div>
         <div class="text-xs text-[#648381]/80 mt-0.5 font-light">${esc(o.position)}</div>
@@ -333,7 +376,7 @@ $('officer_search').addEventListener('input', filterList);
 $('officer_list').addEventListener('change', (e) => {
   const cb = e.target.closest('.chk-officer');
   if (!cb) return;
-  if (cb.checked) selected.set(cb.dataset.name, { name: cb.dataset.name, position: cb.dataset.pos });
+  if (cb.checked) selected.set(cb.dataset.name, { name: cb.dataset.name, position: cb.dataset.pos, group: cb.dataset.group });
   else selected.delete(cb.dataset.name);
   updateSelectedDisplay();
 });
@@ -357,7 +400,13 @@ function updateSelectedDisplay() {
   if (selected.size > 3) $('use_generic_term').checked = true;
 }
 
-// ===== รูปภาพ =====
+// ===== รูปภาพ (สูงสุด MAX_IMAGES รูป และลดขนาดให้ไม่เกิน TARGET_BYTES) =====
+function updateImageLabel() {
+  const mb = files.reduce((n, f) => n + f.size, 0) / 1048576;
+  $('image_label').innerText =
+    `เพิ่มรูปภาพประกอบ (${files.length}/${MAX_IMAGES} รูป` + (files.length ? ` · รวม ${mb.toFixed(1)} MB)` : ')');
+}
+
 function renderPreview() {
   $('image_preview').innerHTML = '';
   files.forEach((f, i) => {
@@ -365,52 +414,108 @@ function renderPreview() {
     wrap.className = 'relative animate-fade-in';
     wrap.innerHTML = `<img class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm">
       <button type="button" class="absolute -top-2 -right-2 bg-[#ffbf46] w-6 h-6 rounded-full text-xs shadow-md hover:scale-110 transition border-2 border-white font-bold">✕</button>`;
-    wrap.querySelector('img').src = URL.createObjectURL(f);
+    const img = wrap.querySelector('img');
+    img.onload = () => URL.revokeObjectURL(img.src);   // คืนหน่วยความจำหลังแสดงรูปแล้ว
+    img.src = URL.createObjectURL(f);
     wrap.querySelector('button').onclick = () => { files.splice(i, 1); renderPreview(); };
     $('image_preview').appendChild(wrap);
   });
-  $('image_label').innerText = `เพิ่มรูปภาพประกอบ (${files.length}/${MAX_IMAGES} รูป)`;
+  updateImageLabel();
 }
+
+// ครบจำนวนแล้วไม่ให้เปิดหน้าเลือกรูปอีก
+$('images').addEventListener('click', (e) => {
+  if (imageBusy) { e.preventDefault(); return; }
+  if (files.length >= MAX_IMAGES) {
+    e.preventDefault();
+    alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูป หากต้องการเปลี่ยนรูป กรุณากดปุ่ม ✕ ลบรูปเดิมก่อน`);
+  }
+});
 
 $('images').addEventListener('change', async (e) => {
   const picked = Array.from(e.target.files);
   e.target.value = '';
+  if (imageBusy || picked.length === 0) return;
   const remaining = MAX_IMAGES - files.length;
   if (remaining <= 0) return alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูป`);
   if (picked.length > remaining) alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูป ระบบจะใช้เพียง ${remaining} รูปแรกที่เลือก`);
+
+  imageBusy = true;
   $('image_label').innerText = '⚡ กำลังบีบอัดรูปภาพ...';
-  for (const f of picked.slice(0, remaining)) {
-    try { files.push(await resizeImage(f, 1280, 0.8)); }
-    catch (err) { console.error('Resize error:', err); }
+  try {
+    let failed = 0;
+    for (const f of picked.slice(0, remaining)) {
+      try { files.push(await compressImage(f)); }
+      catch (err) { failed++; console.error('Resize error:', err); }
+    }
+    if (failed) alert(`ไม่สามารถประมวลผลรูปได้ ${failed} รูป กรุณาลองเลือกรูปนั้นใหม่อีกครั้ง`);
+  } finally {
+    imageBusy = false;
+    renderPreview();
   }
-  renderPreview();
 });
 
-function resizeImage(file, maxWidth, quality) {
+// เปิดรูปแบบประหยัดหน่วยความจำ และหมุนรูปตามข้อมูลการถ่าย (EXIF) ให้ถูกทิศ
+async function loadBitmap(file) {
+  if (window.createImageBitmap) {
+    try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { /* ใช้วิธีสำรอง */ }
+  }
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) return reject(new Error('Not an image'));
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => {
-      let w = img.width, h = img.height;
-      if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(b => b ? resolve(new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' })) : reject(new Error('Canvas is empty')), 'image/jpeg', quality);
-    };
-    img.onerror = () => reject(new Error('Image load failed'));
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load error')); };
     img.src = url;
   });
+}
+
+function canvasToBlob(canvas, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Canvas is empty')), 'image/jpeg', quality);
+  });
+}
+
+// ลดขนาดรูปให้ไม่เกิน TARGET_BYTES: ย่อด้านยาวเหลือไม่เกิน MAX_SIDE ก่อน
+// แล้วลดคุณภาพทีละขั้น หากยังใหญ่เกินจึงย่อขนาดลงอีกจนถึง MIN_SIDE
+async function compressImage(file) {
+  if (!file.type.match(/image.*/)) throw new Error('Not an image');
+  const src = await loadBitmap(file);
+  const sw = src.naturalWidth || src.width;
+  const sh = src.naturalHeight || src.height;
+  const canvas = document.createElement('canvas');
+  let side = Math.min(MAX_SIDE, Math.max(sw, sh));
+  let blob;
+  try {
+    while (true) {
+      const scale = Math.min(1, side / Math.max(sw, sh));
+      canvas.width = Math.round(sw * scale);
+      canvas.height = Math.round(sh * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';                       // รูป PNG โปร่งใสให้พื้นหลังเป็นสีขาว
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(src, 0, 0, canvas.width, canvas.height);
+      for (let q = 0.8; q >= MIN_QUALITY - 1e-9; q -= 0.1) {
+        blob = await canvasToBlob(canvas, q);
+        if (blob.size <= TARGET_BYTES) break;
+      }
+      if (blob.size <= TARGET_BYTES || side <= MIN_SIDE) break;
+      side = Math.max(MIN_SIDE, Math.round(side * 0.85));
+    }
+  } finally {
+    if (src.close) src.close();
+    canvas.width = canvas.height = 0;                  // คืนหน่วยความจำ
+  }
+  return new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
 }
 
 // ===== ส่งข้อมูล =====
 $('newsForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('submit_btn'), btnText = $('btn_text');
+  if (!getType()) return alert('กรุณาเลือกประเภทข่าวก่อนครับ');
   const isPR = getType() === 'pr';
 
+  if (imageBusy) return alert('⏳ ระบบกำลังบีบอัดรูปภาพ กรุณารอสักครู่');
   if (!isPR && !$('activity_date').value) return alert('📅 กรุณาเลือกวันที่ครับ');
   if (!isPR && !$('location').value.trim()) return alert('📍 กรุณาระบุสถานที่ครับ');
   if (!$('summary').value.trim()) return alert('📝 กรุณาใส่เนื้อหาข่าวครับ');
@@ -439,8 +544,16 @@ $('newsForm').addEventListener('submit', async (e) => {
     const officers = isPR ? [] : [...selected.values()];
     const useGeneric = $('use_generic_term').checked || officers.length > 3;
     const sourceType = $('source_type').value;
-    // ผู้ร่วมคณะพร้อมตำแหน่ง: "ชื่อ | ตำแหน่ง ; ชื่อ | ตำแหน่ง"
-    const officersText = useGeneric ? '' : officers.map(o => o.position ? `${o.name} | ${o.position}` : o.name).join(' ; ');
+    const groupVal = (sourceType === 'province') ? $('group_name').value : '';
+    const districtVal = (sourceType === 'district') ? $('district_name').value : '';
+
+    // ผู้ร่วมคณะพร้อมตำแหน่ง: "ชื่อ | ตำแหน่ง ; ชื่อ | ตำแหน่ง" (ตัดคนที่ซ้ำกับหัวหน้าคณะออก)
+    const headName = (headData && !headData.is_all) ? headData.name : null;
+    const others = officers.filter(o => o.name !== headName);
+    const officersText = useGeneric ? '' : others.map(o => o.position ? `${o.name} | ${o.position}` : o.name).join(' ; ');
+    // true เมื่อเจ้าหน้าที่ที่เลือกทุกคน (ไม่นับหัวหน้า) สังกัดกลุ่มเดียวกับเจ้าของเรื่อง
+    const officersSameGroup = !isPR && !!groupVal && others.length > 0 && others.every(o => o.group === groupVal);
+
     // วันที่ภาษาไทย (พ.ศ.) เช่น 12 พฤศจิกายน 2569
     const [yy, mm, dd] = $('activity_date').value.split('-').map(Number);
     const dateThai = `${dd} ${THAI_MONTHS[mm - 1]} ${yy + 543}`;
@@ -461,13 +574,14 @@ $('newsForm').addEventListener('submit', async (e) => {
         date_thai: dateThai,
         location: isPR ? '' : $('location').value.trim(),
         source: sourceType,
-        group: sourceType === 'province' ? $('group_name').value : '',
-        district: sourceType === 'district' ? $('district_name').value : '',
+        group: groupVal,
+        district: districtVal,
         kaset_action: kasetAction,
         kaset_name: KASET_NAME,
         head_officer: headData,
         officers,
         officers_text: officersText,
+        officers_same_group: officersSameGroup,
         use_generic_term: useGeneric,
         summary: $('summary').value.trim(),
         imageUrls: urls
