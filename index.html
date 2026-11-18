@@ -521,6 +521,9 @@ $('newsForm').addEventListener('submit', async (e) => {
   if (!$('summary').value.trim()) return alert('📝 กรุณาใส่เนื้อหาข่าวครับ');
   if (files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
   if (files.length > MAX_IMAGES) return alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูปครับ`);
+  let accessToken = '';
+  try { accessToken = liff.getAccessToken() || ''; } catch (_) {}
+  if (!accessToken) return alert('🔒 ไม่พบการเข้าสู่ระบบ LINE กรุณาเปิดผ่านแอป LINE แล้วลองใหม่');
 
   btn.disabled = true;
   try {
@@ -557,9 +560,6 @@ $('newsForm').addEventListener('submit', async (e) => {
     // วันที่ภาษาไทย (พ.ศ.) เช่น 12 พฤศจิกายน 2569
     const [yy, mm, dd] = $('activity_date').value.split('-').map(Number);
     const dateThai = `${dd} ${THAI_MONTHS[mm - 1]} ${yy + 543}`;
-
-    let accessToken = '';
-    try { accessToken = liff.getAccessToken() || ''; } catch (_) {}
 
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
