@@ -196,12 +196,34 @@
 
     <p class="text-center text-xs text-[#648381] pb-8 opacity-70">สำนักงานเกษตรจังหวัดกาญจนบุรี</p>
   </form>
+
+  <!-- โหมดแก้ไขร่างข่าวที่ AI เขียน (เปิดจากปุ่ม "แก้ไขข้อความ" ใน LINE ด้วย ?mode=edit) -->
+  <div id="edit_view" class="hidden px-5 space-y-6">
+    <div class="card border-[#ffbf46]">
+      <div class="card-head"><div class="num bg-[#ffbf46]/20 text-[#ffbf46]">✏️</div><h3 class="font-bold text-lg">แก้ไขข้อความข่าว</h3></div>
+      <p class="text-[11px] text-[#648381] bg-[#e4fde1]/60 p-2 rounded-lg mb-3">
+        💡 แก้ไขข้อความที่ AI เขียนให้ได้เลย เมื่อกดบันทึก ระบบจะส่งร่างที่แก้แล้วกลับไปในแชท LINE เพื่อให้กด "อนุมัติโพสต์" อีกครั้ง (ยังไม่โพสต์ทันที) และต้องมี <b>#เกษตรกาญจน์</b> ในข้อความ
+      </p>
+      <textarea id="draft_text" rows="16" class="w-full p-4 border border-[#8acb88]/30 rounded-2xl focus:ring-2 focus:ring-[#ffbf46] outline-none bg-[#f9fdf9] shadow-inner"></textarea>
+      <p id="draft_count" class="text-right text-[10px] text-[#648381] mt-1"></p>
+      <p class="lbl mt-4">รูปภาพที่แนบไว้ (แก้ไม่ได้ในหน้านี้ หากต้องการเปลี่ยนรูป ให้เริ่มส่งข่าวใหม่)</p>
+      <div id="draft_images" class="grid grid-cols-3 gap-3"></div>
+    </div>
+    <div class="pt-4 pb-8 sticky bottom-0 z-10">
+      <div class="absolute inset-0 bg-gradient-to-t from-[#e4fde1] via-[#e4fde1]/90 to-transparent -z-10 pointer-events-none"></div>
+      <button type="button" id="draft_save" class="w-full py-4 bg-gradient-to-r from-[#8acb88] to-[#ffbf46] rounded-2xl font-bold text-lg shadow-lg shadow-[#8acb88]/40 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60">
+        <span>💾</span><span id="draft_save_text">บันทึกและส่งกลับไปยืนยันใน LINE</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
 // ===== CONFIG =====
 const LIFF_ID = '2008873330-48xvsQ9g';
 const WEBHOOK_URL = 'https://hook.us2.make.com/9r5ohk6m95st7v34u32vxqk8na6wefiz';
+// API ดึง/บันทึกร่างข่าว ใช้ webhook เดียวกับ Scenario 1 (แยกด้วย action=get/save) ตรวจสิทธิ์ด้วย LINE access token ฝั่ง Make
+const EDIT_API_URL = WEBHOOK_URL;
 const SUPABASE_URL = 'https://ngreqaszduphwftwswdj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmVxYXN6ZHVwaHdmdHdzd2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMTcyNTMsImV4cCI6MjA3NTY5MzI1M30.balzxiWXum4lnl6dCrNzSoF02tRfmG19rEqMnHSynwk';
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQA5WsMKHm9yiBhlLYyBPy4R71gfSzdQCpjzdg_wLL97RaWjQGfCzPie84oBFvqR3cdRWMuFVyVpu0f/pub?gid=0&single=true&output=csv';
@@ -246,6 +268,9 @@ const getType = () => { const r = document.querySelector('input[name="post_type"
       else liff.login();
     } catch (e) { console.warn('Dev Mode', e); }
 
+    // เปิดจากปุ่ม "แก้ไขข้อความ" ใน LINE → โหมดแก้ไขร่างข่าวที่ AI เขียน (ไม่ต้องโหลดรายชื่อเจ้าหน้าที่)
+    if (getParam('mode') === 'edit') { await enterEditMode(); return; }
+
     $('loading-text').innerText = 'กำลังดึงรายชื่อเจ้าหน้าที่...';
     await fetchOfficers();
     buildStaticUI();
@@ -256,6 +281,93 @@ const getType = () => { const r = document.querySelector('input[name="post_type"
     $('app').classList.remove('hidden');
   } catch (err) { alert('Error: ' + err.message); }
 })();
+
+// ===== โหมดแก้ไขร่างข่าว =====
+// อ่านพารามิเตอร์จาก URL (หลัง login LIFF อาจย้ายไปอยู่ใน liff.state)
+function getParam(name) {
+  const p = new URLSearchParams(location.search);
+  if (p.has(name)) return p.get(name);
+  const st = p.get('liff.state');
+  if (st) return new URLSearchParams(st.replace(/^[^?]*\?/, '').replace(/^\?/, '')).get(name);
+  return null;
+}
+
+async function editApi(action, extra = {}) {
+  let token = '';
+  try { token = liff.getAccessToken() || ''; } catch (_) {}
+  if (!token) throw new Error('ไม่พบการเข้าสู่ระบบ LINE กรุณาเปิดผ่านแอป LINE');
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30000);
+  try {
+    const res = await fetch(EDIT_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, access_token: token, ...extra }),
+      signal: ctrl.signal
+    });
+    let data = null;
+    try { data = await res.json(); } catch (_) {}
+    if (!res.ok) {
+      const code = data && data.error;
+      if (code === 'no_draft') throw new Error('ไม่พบร่างข่าว (อาจอนุมัติโพสต์ไปแล้ว หรือยังไม่ได้ส่งข่าวใหม่)');
+      if (code === 'forbidden') throw new Error('ร่างนี้ไม่ใช่ของคุณ');
+      if (code === 'unauthorized') throw new Error('ยืนยันตัวตนไม่สำเร็จ กรุณาเปิดจากแชท LINE อีกครั้ง');
+      if (code === 'bad_request') throw new Error('ข้อความไม่ถูกต้อง (ต้องมี ' + REQUIRED_HASHTAG + ')');
+      throw new Error('เกิดข้อผิดพลาด (' + res.status + ')');
+    }
+    return data || {};
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่');
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+
+async function enterEditMode() {
+  const DRAFT_ID = getParam('draft') || '';  // รหัสร่างของข่าวนี้ (ว่าง = ใช้ร่างล่าสุดของผู้ใช้ เพื่อรองรับปุ่มเก่า)
+  $('newsForm').classList.add('hidden');
+  $('loading-text').innerText = 'กำลังดึงร่างข่าว...';
+  try {
+    const d = await editApi('get', { draft: DRAFT_ID });
+    if (!d.caption) throw new Error('ไม่พบร่างข่าว (อาจอนุมัติโพสต์ไปแล้ว หรือยังไม่ได้ส่งข่าวใหม่)');
+    $('draft_text').value = d.caption;
+    updateDraftCount();
+    const imgs = Array.isArray(d.imageUrls) ? d.imageUrls : [];
+    $('draft_images').innerHTML = imgs
+      .map(u => `<img src="${esc(u)}" class="w-full h-24 object-cover rounded-xl border border-[#648381]/20 shadow-sm" loading="lazy">`).join('');
+    $('edit_view').classList.remove('hidden');
+  } catch (err) {
+    alert('⚠️ ' + (err.message || err));
+    try { if (liff.isInClient()) liff.closeWindow(); } catch (_) {}
+  }
+  $('loading-screen').classList.add('hidden');
+  $('app').classList.remove('hidden');
+}
+
+function updateDraftCount() {
+  $('draft_count').innerText = `${$('draft_text').value.length.toLocaleString()} ตัวอักษร`;
+}
+$('draft_text').addEventListener('input', updateDraftCount);
+
+$('draft_save').addEventListener('click', async () => {
+  const btn = $('draft_save'), label = $('draft_save_text');
+  const text = $('draft_text').value.trim();
+  if (!text) return alert('📝 ข้อความว่างเปล่า');
+  if (!text.includes(REQUIRED_HASHTAG)) return alert(`#️⃣ ข่าวต้องมีแฮชแท็ก ${REQUIRED_HASHTAG}`);
+  if (!confirm('บันทึกข้อความนี้ แล้วส่งกลับไปยืนยันในแชท LINE?')) return;
+  btn.disabled = true;
+  label.innerText = '⏳ กำลังบันทึก...';
+  try {
+    await editApi('save', { caption: text, draft: getParam('draft') || '' });
+    alert('✅ บันทึกแล้ว! กลับไปที่แชท LINE แล้วกด "อนุมัติโพสต์" เพื่อโพสต์ข่าว');
+    try { if (liff.isInClient()) liff.closeWindow(); } catch (_) {}
+    label.innerText = '✅ บันทึกแล้ว';
+  } catch (err) {
+    console.error(err);
+    alert('เกิดข้อผิดพลาด: ' + (err.message || err));
+    btn.disabled = false;
+    label.innerText = 'ลองบันทึกอีกครั้ง';
+  }
+});
 
 async function fetchOfficers() {
   try {
@@ -521,9 +633,6 @@ $('newsForm').addEventListener('submit', async (e) => {
   if (!$('summary').value.trim()) return alert('📝 กรุณาใส่เนื้อหาข่าวครับ');
   if (files.length === 0) return alert('📸 กรุณาใส่รูปภาพประกอบอย่างน้อย 1 รูปครับ');
   if (files.length > MAX_IMAGES) return alert(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูปครับ`);
-  let accessToken = '';
-  try { accessToken = liff.getAccessToken() || ''; } catch (_) {}
-  if (!accessToken) return alert('🔒 ไม่พบการเข้าสู่ระบบ LINE กรุณาเปิดผ่านแอป LINE แล้วลองใหม่');
 
   btn.disabled = true;
   try {
@@ -560,6 +669,9 @@ $('newsForm').addEventListener('submit', async (e) => {
     // วันที่ภาษาไทย (พ.ศ.) เช่น 12 พฤศจิกายน 2569
     const [yy, mm, dd] = $('activity_date').value.split('-').map(Number);
     const dateThai = `${dd} ${THAI_MONTHS[mm - 1]} ${yy + 543}`;
+
+    let accessToken = '';
+    try { accessToken = liff.getAccessToken() || ''; } catch (_) {}
 
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
